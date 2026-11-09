@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { clearStale } from '../../domain/actions';
 import { addDays, parseDate } from '../../domain/dates';
 import { presetForItem } from '../../domain/expiry';
-import { recommend } from '../../domain/recipes';
+import { matchDishes } from '../../domain/dishes';
 import { useStoreState } from '../../store/useStore';
 import type { AppApi } from '../api';
 import { Empty, ItemRow } from '../components';
@@ -19,7 +19,7 @@ export function Home({ app }: { app: AppApi }) {
   const over = dated.filter((x) => x.e.days! < 0).sort((a, b) => a.e.days! - b.e.days!);
   const soon = dated.filter((x) => x.e.days! >= 0 && x.e.days! <= 3).sort((a, b) => a.e.days! - b.e.days!);
   const stale = over.filter((x) => x.e.days! <= -3);
-  const urgentRecipe = recommend(hh, app.ctx, 3).find((m) => m.urgentCount > 0);
+  const urgentDishes = matchDishes(hh, app.ctx).filter((m) => m.readiness === 'ready' && m.urgentCount > 0).slice(0, 3);
 
   // 인사말과 날짜
   const now = new Date();
@@ -118,18 +118,16 @@ export function Home({ app }: { app: AppApi }) {
         {soon.length ? soon.map((x) => <ItemRow key={x.it.id} item={x.it} app={app} />) : <Empty title="임박한 품목이 없어요" desc="3일 안에 기한이 오는 것이 없습니다." art={<EmptyArt />} />}
       </div>
 
-      {urgentRecipe && (
+      {urgentDishes.length > 0 && (
         <div className="hero-card">
-          <div className="hero-eyebrow">임박 재료로 만들 수 있어요</div>
+          <div className="hero-eyebrow">임박 재료로 바로 만들 수 있어요</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 600 }}>{urgentRecipe.recipe.name}</div>
-              <div className="hint">
-                {urgentRecipe.have.filter((h) => h.urgent).map((h) => h.name).join(', ')} 사용 · {urgentRecipe.recipe.minutes}분
-              </div>
+              <div style={{ fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 600 }}>{urgentDishes.map((m) => m.dish.name).join(' · ')}</div>
+              <div className="hint">{[...new Set(urgentDishes.flatMap((m) => m.have.filter((h) => h.urgent).map((h) => h.name)))].join(', ')} 사용</div>
             </div>
-            <button className="btn sm pri" onClick={() => app.go('recipes')}>
-              레시피 보기
+            <button className="btn sm pri" onClick={() => app.go('dishes')}>
+              요리 보기
             </button>
           </div>
         </div>

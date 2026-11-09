@@ -13,14 +13,14 @@ import { Add } from './ui/screens/Add';
 import { Family } from './ui/screens/Family';
 import { Fridge } from './ui/screens/Fridge';
 import { Home } from './ui/screens/Home';
-import { Recipes } from './ui/screens/Recipes';
+import { Dishes } from './ui/screens/Dishes';
 import { Shopping } from './ui/screens/Shopping';
 
 const TABS: { id: Tab; label: string; icon: () => ReactElement }[] = [
   { id: 'home', label: '홈', icon: Icon.home },
   { id: 'fridge', label: '냉장고', icon: Icon.fridge },
   { id: 'add', label: '등록', icon: Icon.plus },
-  { id: 'recipes', label: '레시피', icon: Icon.recipe },
+  { id: 'dishes', label: '요리', icon: Icon.recipe },
   { id: 'shop', label: '장보기', icon: Icon.cart },
 ];
 
@@ -105,7 +105,7 @@ export default function App() {
     if (sheetItemId && !sheetItem) setSheetItemId(null);
   }, [sheetItemId, sheetItem]);
 
-  const Screen = { home: Home, fridge: Fridge, add: Add, recipes: Recipes, shop: Shopping, family: Family }[tab];
+  const Screen = { home: Home, fridge: Fridge, add: Add, dishes: Dishes, shop: Shopping, family: Family }[tab];
 
   return (
     <div className="app">

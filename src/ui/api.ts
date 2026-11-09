@@ -1,7 +1,7 @@
 import type { ActionContext, ActionResult } from '../domain/actions';
 import type { Expiry, Household, Item } from '../domain/types';
 
-export type Tab = 'home' | 'fridge' | 'add' | 'recipes' | 'shop' | 'family';
+export type Tab = 'home' | 'fridge' | 'add' | 'dishes' | 'shop' | 'family';
 
 export interface AddPrefill {
   presetKey?: string;
