@@ -1,0 +1,1052 @@
+<title>칸칸 설계 리뷰</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&family=Hahmlet:wght@500;600&display=swap">
+<style>
+/* 레이아웃: 좌측 정렬 편집형 문서 + 중앙 폰 프로토타입(390px) + 우측 주석 패널. 주방의 서늘한 흰색 바탕, 냉장 청록 액센트, 상태색 4종(신선/임박/지남/냉동) */
+:root{
+  --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EEF2F1; --fg:#16211F; --fg-2:#556660; --fg-3:#6F7D78; --line:#DCE3E0; --line-2:#C9D3CF;
+  --accent:#0E7C86; --accent-soft:#D9EFF1; --accent-fg:#FFFFFF;
+  --fresh:#246B42; --fresh-soft:#DDF1E4; --soon:#8A5200; --soon-soft:#FBEAD0; --over:#A52A28; --over-soft:#F9DEDC; --frozen:#2F5FA8; --frozen-soft:#DCE7F8;
+  --bezel:#1B1F1E; --shadow:0 10px 30px rgba(22,33,31,.10);
+  --font-ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --font-head:"Hahmlet","Nanum Myeongjo","Apple SD Gothic Neo",serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F1514; --surface:#161E1C; --surface-2:#1E2826; --fg:#E8EEEC; --fg-2:#A7B4AF; --fg-3:#7E8C87; --line:#2A3532; --line-2:#36433F;
+  --accent:#5CC2CB; --accent-soft:#123B3F; --accent-fg:#06282B;
+  --fresh:#7BD3A0; --fresh-soft:#163A28; --soon:#F2B45A; --soon-soft:#3F2B0C; --over:#F08A86; --over-soft:#4A1816; --frozen:#8FB4F0; --frozen-soft:#16294A;
+  --bezel:#3A4441; --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0F1514; --surface:#161E1C; --surface-2:#1E2826; --fg:#E8EEEC; --fg-2:#A7B4AF; --fg-3:#7E8C87; --line:#2A3532; --line-2:#36433F;
+  --accent:#5CC2CB; --accent-soft:#123B3F; --accent-fg:#06282B;
+  --fresh:#7BD3A0; --fresh-soft:#163A28; --soon:#F2B45A; --soon-soft:#3F2B0C; --over:#F08A86; --over-soft:#4A1816; --frozen:#8FB4F0; --frozen-soft:#16294A;
+  --bezel:#3A4441; --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1160px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
+h1,h2,h3{font-family:var(--font-head);font-weight:600;text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.2}
+h2{font-size:clamp(22px,2.6vw,28px);line-height:1.25}
+h3{font-size:17px;font-family:var(--font-ui);font-weight:600}
+p{margin:0}
+.lead{color:var(--fg-2);font-size:16px;max-width:64ch}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.topnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topnav .in{max-width:1160px;margin:0 auto;display:flex;gap:4px;align-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;overflow-x:auto;scrollbar-width:none}
+.topnav .in::-webkit-scrollbar{display:none}
+.topnav .brand{font-family:var(--font-head);font-weight:600;font-size:16px;margin-right:12px;white-space:nowrap}
+.topnav a{color:var(--fg-2);text-decoration:none;font-size:13.5px;padding:6px 10px;border-radius:999px;white-space:nowrap}
+.topnav a:hover{background:var(--surface-2);color:var(--fg)}
+header.hero{padding-block:48px 28px;display:grid;gap:14px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--fg-3)}
+.meta span{padding:3px 10px;border:1px solid var(--line);border-radius:999px}
+section{padding-block:40px;border-top:1px solid var(--line)}
+.sec-head{display:grid;gap:8px;margin-bottom:24px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}
+.card h3{margin-bottom:8px}
+.round{display:grid;grid-template-columns:120px minmax(0,1fr);gap:20px;padding:24px 0;border-top:1px dashed var(--line)}
+.round:first-of-type{border-top:0}
+.round .no{font-family:var(--font-head);font-size:44px;line-height:1;color:var(--accent);font-weight:500}
+.round .no small{display:block;font-family:var(--font-ui);font-size:12px;color:var(--fg-3);margin-top:8px;letter-spacing:.04em}
+.round .body{display:grid;gap:14px;min-width:0}
+.round .q{color:var(--fg-2);font-size:14.5px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.list{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.list li{position:relative;padding-left:18px;font-size:14.5px}
+.list li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--line-2)}
+.list.find li::before{background:var(--over)}
+.list.fix li::before{background:var(--fresh)}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--fg-3);text-transform:uppercase;margin-bottom:8px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12.5px;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--fg-2);border:1px solid var(--line)}
+.tag.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.delta{background:var(--accent-soft);border-radius:16px;padding:20px 22px;display:grid;gap:10px}
+.delta h3{color:var(--accent)}
+.delta ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14.5px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-3);font-weight:600}
+.tbl td:first-child{font-weight:500}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill.mvp{background:var(--fresh-soft);color:var(--fresh)}
+.pill.p2{background:var(--accent-soft);color:var(--accent)}
+.pill.p3{background:var(--frozen-soft);color:var(--frozen)}
+.pill.hold{background:var(--surface-2);color:var(--fg-2)}
+.pill.ok{background:var(--fresh-soft);color:var(--fresh)}
+.pill.warn{background:var(--soon-soft);color:var(--soon)}
+.num{font-variant-numeric:tabular-nums}
+/* 디자인 시스템 전시 */
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.sw{border-radius:12px;border:1px solid var(--line);overflow:hidden;background:var(--surface)}
+.sw .c{height:56px}
+.sw .t{padding:8px 10px;font-size:12px;color:var(--fg-2)}
+.sw .t b{display:block;color:var(--fg);font-weight:600}
+.type-sample{display:grid;gap:10px}
+.type-sample .row{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:8px}
+.type-sample .row span{font-size:12px;color:var(--fg-3)}
+.gallery{display:grid;gap:14px}
+.chips-demo{display:flex;flex-wrap:wrap;gap:8px}
+/* 상태 칩(앱 공통) */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip.fresh{background:var(--fresh-soft);color:var(--fresh)}
+.chip.soon{background:var(--soon-soft);color:var(--soon)}
+.chip.over{background:var(--over-soft);color:var(--over)}
+.chip.frozen{background:var(--frozen-soft);color:var(--frozen)}
+.chip.none{background:var(--surface-2);color:var(--fg-2)}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+/* 프로토타입 */
+.proto{display:grid;grid-template-columns:minmax(0,1fr) 390px minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:1000px){.proto{grid-template-columns:1fr;justify-items:center}.proto .side{max-width:560px;width:100%}}
+.side{display:grid;gap:14px;min-width:0}
+.side .card{padding:16px 18px}
+.side .card h3{font-size:15px}
+.side .list li{font-size:13.5px}
+.phone{width:390px;max-width:100%;height:800px;background:var(--bezel);border-radius:46px;padding:12px;box-shadow:var(--shadow)}
+.phone-in{height:100%;background:var(--bg);border-radius:36px;overflow:hidden;display:flex;flex-direction:column;position:relative;isolation:isolate}
+.status{display:flex;justify-content:space-between;padding:12px 24px 4px;font-size:12.5px;font-weight:600;color:var(--fg-2)}
+.appbar{display:flex;align-items:center;justify-content:space-between;padding:6px 18px 10px}
+.appbar .hh{font-family:var(--font-head);font-size:18px;font-weight:600}
+.appbar .sync{font-size:11.5px;color:var(--fg-3);display:flex;align-items:center;gap:5px}
+.appbar .sync i{width:7px;height:7px;border-radius:50%;background:var(--fresh);display:inline-block}
+.screen{flex:1;overflow-y:auto;padding:4px 16px 28px;display:grid;gap:14px;align-content:start;scrollbar-width:thin}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface);padding:6px 6px 14px}
+.tabbar button{appearance:none;border:0;background:none;color:var(--fg-3);font:inherit;font-size:11px;display:grid;justify-items:center;gap:3px;padding:6px 2px;border-radius:12px;cursor:pointer;min-height:48px}
+.tabbar button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button.on{color:var(--accent)}
+.tabbar button.add{color:var(--accent-fg)}
+.tabbar button.add span.ic{width:44px;height:44px;border-radius:14px;background:var(--accent);display:grid;place-items:center;margin-top:-18px;box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 35%,transparent)}
+.tabbar button.add svg{stroke:var(--accent-fg)}
+.tabbar button.add{color:var(--fg-3)}
+/* 앱 요소 */
+.p-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.p-title{font-size:13px;color:var(--fg-2);font-weight:500;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.p-title a{color:var(--accent);font-size:12.5px;text-decoration:none;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{border-radius:12px;padding:10px 10px;display:grid;gap:2px;cursor:pointer;border:1px solid transparent}
+.stat b{font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;font-weight:500}
+.stat.over{background:var(--over-soft);color:var(--over)}
+.stat.soon{background:var(--soon-soft);color:var(--soon)}
+.stat.all{background:var(--surface-2);color:var(--fg-2)}
+.stat.all b{color:var(--fg)}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer;min-height:56px}
+.row:first-of-type{border-top:0}
+.row .cat{width:38px;height:38px;border-radius:11px;background:var(--surface-2);display:grid;place-items:center;font-size:11.5px;font-weight:600;color:var(--fg-2);flex:none;letter-spacing:-.02em}
+.row .cat.frz{background:var(--frozen-soft);color:var(--frozen)}
+.row .txt{flex:1;min-width:0}
+.row .nm{font-size:14.5px;font-weight:500;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.row .nm small{font-size:12px;color:var(--fg-3);font-weight:400}
+.row .loc{font-size:12px;color:var(--fg-3);margin-top:1px}
+.seg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.seg::-webkit-scrollbar{display:none}
+.seg button{appearance:none;font:inherit;font-size:13px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg-2);cursor:pointer;white-space:nowrap;min-height:36px}
+.seg button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+.compgrid{display:grid;grid-template-columns:1fr 92px;gap:8px}
+.comps{display:grid;gap:6px}
+.comp{display:flex;justify-content:space-between;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:9px 12px;font-size:13px;cursor:pointer;min-height:42px}
+.comp.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.comp .n{font-variant-numeric:tabular-nums;color:var(--fg-3);font-size:12px;display:flex;gap:4px;align-items:center}
+.comp.on .n{color:var(--accent)}
+.comp .n i{width:6px;height:6px;border-radius:50%;display:inline-block}
+.comp .n i.over{background:var(--over)} .comp .n i.soon{background:var(--soon)}
+.door{display:grid;gap:6px}
+.door .comp{flex-direction:column;align-items:center;text-align:center;font-size:12px;padding:8px 6px}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 12px;min-height:44px}
+.search input{border:0;background:none;font:inherit;font-size:14px;color:var(--fg);flex:1;outline:none;min-width:0}
+.search svg{width:18px;height:18px;stroke:var(--fg-3);fill:none;stroke-width:2}
+.field{display:grid;gap:6px}
+.field label{font-size:12.5px;color:var(--fg-2);font-weight:500}
+.inp{width:100%;font:inherit;font-size:15px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);min-height:46px}
+.inp:focus{outline:2px solid var(--accent);outline-offset:1px}
+.sug{display:grid;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.sug button{appearance:none;border:0;border-top:1px solid var(--line);background:none;text-align:left;font:inherit;font-size:14px;padding:11px 12px;cursor:pointer;color:var(--fg);display:flex;justify-content:space-between;gap:8px;min-height:44px}
+.sug button:first-child{border-top:0}
+.sug button small{color:var(--fg-3);font-size:12px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.stepper button{appearance:none;border:0;background:none;font:inherit;font-size:18px;width:44px;height:44px;cursor:pointer;color:var(--accent)}
+.stepper span{min-width:64px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{appearance:none;font:inherit;font-size:13px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg-2);cursor:pointer;min-height:36px}
+.chips button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.btn{appearance:none;font:inherit;font-size:14.5px;font-weight:600;padding:12px 16px;border-radius:13px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{color:var(--over);border-color:color-mix(in srgb,var(--over) 40%,transparent)}
+.btn.sm{min-height:40px;padding:8px 12px;font-size:13.5px;border-radius:11px}
+.btn.block{width:100%}
+.btn:focus-visible,.seg button:focus-visible,.chips button:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.preview{background:var(--surface-2);border-radius:12px;padding:12px;font-size:13.5px;display:grid;gap:4px}
+.preview b{font-size:16px}
+.empty{text-align:center;padding:28px 12px;color:var(--fg-2);display:grid;gap:10px;justify-items:center}
+.empty b{color:var(--fg);font-weight:600;font-size:15px}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line);font-size:14px;min-height:48px}
+.toggle:first-of-type{border-top:0}
+.toggle small{display:block;color:var(--fg-3);font-size:12px}
+.sw-btn{width:46px;height:28px;border-radius:999px;background:var(--line-2);position:relative;border:0;cursor:pointer;flex:none}
+.sw-btn::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s}
+.sw-btn.on{background:var(--accent)} .sw-btn.on::after{left:21px}
+.member{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.member:first-of-type{border-top:0}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:13px;flex:none}
+.member .role{margin-left:auto;font-size:12px;color:var(--fg-3)}
+.code{font-family:var(--font-ui);font-size:26px;font-weight:600;letter-spacing:.14em;font-variant-numeric:tabular-nums}
+/* 시트, 스낵바 */
+.scrim{position:absolute;inset:0;background:rgba(10,20,18,.42);z-index:5;display:flex;align-items:flex-end}
+.sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:10px 18px 24px;width:100%;display:grid;gap:14px;max-height:88%;overflow-y:auto}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line-2);margin:0 auto 4px}
+.sheet h4{margin:0;font-size:19px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px}
+.kv dt{color:var(--fg-3)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.actions .btn{min-height:46px;font-size:14px}
+.snack{position:absolute;left:14px;right:14px;bottom:92px;z-index:6;background:var(--fg);color:var(--bg);border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:10px;font-size:13.5px;box-shadow:var(--shadow)}
+.snack button{appearance:none;border:0;background:none;font:inherit;font-weight:600;color:var(--accent);margin-left:auto;cursor:pointer;padding:6px 8px;min-height:36px;filter:brightness(1.25)}
+.basis{font-size:11px;font-weight:500;color:var(--fg-3);border:1px solid var(--line);border-radius:6px;padding:0 5px}
+.feed{display:grid;gap:6px;font-size:13px;color:var(--fg-2)}
+.feed span b{color:var(--fg);font-weight:500}
+.hint{font-size:12.5px;color:var(--fg-3)}
+.flow-btn{appearance:none;font:inherit;font-size:12.5px;color:var(--accent);background:var(--accent-soft);border:0;border-radius:999px;padding:3px 10px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:640px){.round{grid-template-columns:1fr}.round .no{font-size:32px}.phone{height:720px}}
+</style>
+
+<nav class="topnav"><div class="in">
+  <span class="brand">칸칸</span>
+  <a href="#review">5회 점검</a><a href="#features">추가 기능</a><a href="#system">디자인 시스템</a><a href="#proto">프로토타입</a><a href="#verify">검증</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero">
+  <span class="eyebrow">가족 냉장고 관리 앱 · 설계 리뷰 2차</span>
+  <h1>칸칸, 다섯 번 뜯어보고 다시 조립한 설계</h1>
+  <p class="lead">1차 설계(가정 → 보관소 → 칸 → 품목, 기한 우선순위 규칙, 가정별 데이터 분리)를 다섯 개의 렌즈로 점검하고 고쳤습니다. 그 결과를 디자인 시스템과 눌러볼 수 있는 프로토타입으로 옮겼고, 마지막에 휴리스틱과 과업 흐름으로 검증했습니다.</p>
+  <div class="meta"><span>2026년 11월 9일</span><span>점검 5회 · 발견 23건 · 개선 24건</span><span>추가 기능 20개 검토</span><span>프로토타입 5화면 · 가정 2곳</span></div>
+</header>
+
+<!-- ───────────── 1. 5회 점검 ───────────── -->
+<section id="review">
+  <div class="sec-head">
+    <span class="eyebrow">01 · 점검</span>
+    <h2>다섯 개의 렌즈로 본 1차 설계</h2>
+    <p class="lead">각 라운드는 한 가지 관점만 씁니다. 발견은 1차 설계에서 빠졌거나 틀린 부분이고, 개선은 2차 설계에 반영한 결정입니다.</p>
+  </div>
+
+  <div class="round">
+    <div class="no">1<small>데이터 · 기한 로직</small></div>
+    <div class="body">
+      <p class="q">같은 입력이면 항상 같은 기한이 나오는가. 현실의 식품 상태 변화를 모델이 다 표현하는가.</p>
+      <div class="cols">
+        <div><div class="lbl">발견</div><ul class="list find">
+          <li>냉동으로 옮긴 뒤 다시 냉장으로 꺼내는 "해동" 상태가 없다. 재냉동 위험을 경고할 수 없다.</li>
+          <li>계란 30구처럼 개수로 세는 품목과 우유 1L처럼 용량으로 세는 품목이 같은 수량 필드를 쓴다. 차감 UI가 어긋난다.</li>
+          <li>소금, 간장, 식초처럼 사실상 기한 관리가 무의미한 품목도 기한을 강제한다. 가짜 임박 알림이 생긴다.</li>
+          <li>구매일도 기준일도 없이 등록하면 기한을 계산할 수 없다. 폴백이 정의되지 않았다.</li>
+          <li>D-day 계산이 자정 경계와 시간대를 다루지 않는다. 밤 11시 59분에 D-1이던 것이 1분 뒤 D-day가 되어야 한다.</li>
+        </ul></div>
+        <div><div class="lbl">개선</div><ul class="list fix">
+          <li>품목에 상태 열(냉장·냉동·해동됨)을 추가. 해동된 육류를 다시 냉동하려 하면 시트에서 경고하고 기한을 24시간으로 당긴다.</li>
+          <li>식품 사전에 수량 유형(개수형·용량형)을 둔다. 개수형은 -1 버튼, 용량형은 "절반·다 먹음" 버튼으로 차감한다.</li>
+          <li>"기한 관리 안 함" 플래그. 사전 기본값이 그렇게 설정된 품목은 회색 칩만 보이고 알림과 집계에서 빠진다.</li>
+          <li>기준일 &gt; 구매일 &gt; 등록일 순으로 폴백하고, 폴백이 쓰였으면 칩에 "등록일 기준"이라 표기한다.</li>
+          <li>기한은 날짜만(시간 없음) 저장하고, D-day는 기기의 지역 날짜로 매일 자정 재계산한다. 가족이 해외에 있어도 집 기준 날짜를 쓰도록 가정에 시간대를 둔다.</li>
+          <li>모든 기한 칩 옆에 근거 뱃지(직접·표기·개봉·통상)를 붙여 왜 그 날짜인지 보이게 한다.</li>
+        </ul></div>
+      </div>
+      <div class="tags"><span class="tag on">모델 변경</span><span class="tag on">프로토타입 반영</span><span class="tag">시간대 설정은 2차</span></div>
+    </div>
+  </div>
+
+  <div class="round">
+    <div class="no">2<small>가족 협업 · 권한</small></div>
+    <div class="body">
+      <p class="q">네 사람이 동시에 쓰면 무엇이 깨지는가. 가족 사이의 관계를 앱이 불편하게 만들지는 않는가.</p>
+      <div class="cols">
+        <div><div class="lbl">발견</div><ul class="list find">
+          <li>두 사람이 동시에 "1개 먹음"을 누르면 마지막 저장이 이긴다. 14개에서 두 번 먹었는데 13개가 남는다.</li>
+          <li>"누가 먹었는지" 기록이 기본 공개다. 어떤 집에서는 감시처럼 느껴진다.</li>
+          <li>아이 계정 정책이 없다. 초등학생이 실수로 품목을 삭제할 수 있다.</li>
+          <li>도우미나 잠시 머무는 손님처럼 가정 구성원이 아닌 사람이 냉장고를 봐야 하는 경우가 빠졌다.</li>
+          <li>활동 피드가 모든 행동을 흘려보낸다. 4인 가족이면 하루 30줄이 넘는다.</li>
+        </ul></div>
+        <div><div class="lbl">개선</div><ul class="list fix">
+          <li>수량 변경은 절대값이 아니라 증감 이벤트(-1, -1)로 기록하고 서버에서 합산한다. 오프라인 충돌도 같은 방식으로 해결된다.</li>
+          <li>가정 설정에 "먹은 사람 표시" 스위치. 끄면 기록은 남되 화면에는 "누군가 먹음"으로만 보인다.</li>
+          <li>역할 세 가지로 확정: 관리자(구조 변경·구성원 관리), 구성원(등록·수정·차감), 보기 전용(차감만 가능). 보기 전용에는 삭제와 버림이 숨겨진다.</li>
+          <li>24시간짜리 읽기 전용 링크. 가정 데이터는 그대로 격리된 채 서버가 임시 토큰으로만 열어준다.</li>
+          <li>피드는 홈에서 접힌 상태가 기본이고, 하루 단위로 "엄마가 5개 등록, 지우가 2개 먹음"처럼 요약한다.</li>
+        </ul></div>
+      </div>
+      <div class="tags"><span class="tag on">모델 변경</span><span class="tag on">RLS 정책에 역할 추가</span><span class="tag">임시 링크는 3차</span></div>
+    </div>
+  </div>
+
+  <div class="round">
+    <div class="no">3<small>입력 비용 · 마찰</small></div>
+    <div class="body">
+      <p class="q">냉장고 문을 연 채 한 손으로 등록이 끝나는가. 등록보다 "안 하고 넘어가기"가 쉬우면 앱은 2주 안에 버려진다.</p>
+      <div class="cols">
+        <div><div class="lbl">발견</div><ul class="list find">
+          <li>1차 설계의 "10초 등록"은 목표만 있고 탭 수를 세지 않았다. 날짜 피커를 열면 그것만으로 4탭이다.</li>
+          <li>매주 똑같이 사는 우유, 계란, 두부도 매번 처음부터 등록해야 한다.</li>
+          <li>장을 본 날은 10개를 연달아 등록한다. 한 개 저장할 때마다 홈으로 돌아오면 10번 왕복한다.</li>
+          <li>"어디에 뒀더라"를 찾는 전역 검색이 없다. 칸을 하나씩 열어봐야 한다.</li>
+          <li>잘못 누른 삭제와 버림을 되돌릴 방법이 없다.</li>
+        </ul></div>
+        <div><div class="lbl">개선</div><ul class="list fix">
+          <li>날짜는 피커 대신 칩으로 받는다. 구매일은 오늘·어제·그제, 기한은 자동·+3일·+1주·+2주·+1달. 직접 입력은 마지막 칩 뒤에 숨긴다.</li>
+          <li>등록 화면 맨 위에 "다시 샀어요" 칩 3개. 최근 등록 품목을 누르면 위치·수량·기한이 그대로 채워져 저장만 하면 된다. 3탭.</li>
+          <li>"장본 날 모드" 스위치. 켜두면 저장 뒤 홈으로 가지 않고 빈 폼이 다시 열리며 등록 개수를 센다.</li>
+          <li>냉장고 탭 상단에 검색창. 이름 두 글자면 모든 보관소에서 찾아 "냉장실 · 2단"처럼 위치를 보여준다.</li>
+          <li>삭제·버림·차감 뒤 5초간 스낵바에 되돌리기. 수량이 0이 되면 장보기 목록에 자동 추가되고 그것도 함께 되돌려진다.</li>
+          <li>같은 품목이 같은 보관소에 이미 있으면 저장 시 "수량을 합칠까요?"를 물어 중복 행을 막는다.</li>
+        </ul></div>
+      </div>
+      <div class="tags"><span class="tag on">프로토타입 반영</span><span class="tag on">탭 수는 검증 절에서 측정</span></div>
+    </div>
+  </div>
+
+  <div class="round">
+    <div class="no">4<small>알림 · 습관 형성</small></div>
+    <div class="body">
+      <p class="q">알림이 행동으로 이어지는가, 아니면 끄게 만드는가. 앱이 없어도 되는 날이 오면 그건 실패인가 성공인가.</p>
+      <div class="cols">
+        <div><div class="lbl">발견</div><ul class="list find">
+          <li>품목별 D-3, D-1 알림을 기본으로 켜면 38개 품목 가정은 하루 서너 번 울린다. 2주면 알림을 끈다.</li>
+          <li>알림을 눌러도 앱이 열릴 뿐 처리할 수 없다. "먹었음"을 누르려면 세 화면을 더 가야 한다.</li>
+          <li>기한이 지난 품목이 영원히 "지남" 목록에 남는다. 실제로는 이미 버렸는데 앱만 모른다.</li>
+          <li>칭찬이 없다. 버린 게 없는 주에도 앱은 아무 말이 없다.</li>
+        </ul></div>
+        <div><div class="lbl">개선</div><ul class="list fix">
+          <li>기본 알림은 아침 한 번(시간 선택)의 묶음 요약. 품목별 개별 알림은 꺼져 있고 켜더라도 하루 최대 2건으로 상한을 둔다.</li>
+          <li>알림에 바로 처리 버튼(먹음·3일 연장·버림)을 넣는다. iOS와 Android 모두 알림 액션을 지원한다.</li>
+          <li>지난 지 3일이 된 품목은 아침 요약 끝에 "아직 있나요?" 정리 카드로 묶어 한 번에 처리하게 한다.</li>
+          <li>일요일 저녁 주간 카드 한 장: 등록 N, 먹음 N, 버림 N. 버림이 0이면 그 사실만 크게 보여준다. 순위나 경쟁 요소는 넣지 않는다.</li>
+          <li>조용한 시간(기본 22시부터 7시)과 수신 대상(전체·등록자만) 설정을 가정 단위로 둔다.</li>
+        </ul></div>
+      </div>
+      <div class="tags"><span class="tag on">설정 화면 반영</span><span class="tag">알림 액션은 네이티브 빌드에서 구현</span></div>
+    </div>
+  </div>
+
+  <div class="round">
+    <div class="no">5<small>기술 · 접근성 · 운영</small></div>
+    <div class="body">
+      <p class="q">와이파이가 약한 주방에서 동작하는가. 할머니와 아이가 같이 쓸 수 있는가. 1년 뒤 비용은 얼마인가.</p>
+      <div class="cols">
+        <div><div class="lbl">발견</div><ul class="list find">
+          <li>오프라인 전략이 "캐시 후 동기화"라는 한 줄뿐이다. 충돌 해결 방식이 없다.</li>
+          <li>행 수준 보안 정책이 매 쿼리마다 구성원 표를 서브쿼리한다. 품목 수천 건이면 느려진다.</li>
+          <li>상태를 색으로만 구분한다. 적록색약 사용자에게 신선과 지남이 같아 보인다.</li>
+          <li>사진 원본을 그대로 올리면 가정당 월 수백 MB가 쌓인다.</li>
+          <li>공용 식품 사전을 수정하면 이미 등록된 품목의 기한이 조용히 바뀐다.</li>
+          <li>바코드 캐시 같은 공용 표에 누가 쓰는지 정해지지 않았다. 아무 가정이나 쓸 수 있으면 오염된다.</li>
+        </ul></div>
+        <div><div class="lbl">개선</div><ul class="list fix">
+          <li>모든 변경을 이벤트(등록·증감·이동·삭제)로 기기에 먼저 기록하고 순서대로 전송한다. 증감은 교환법칙이 성립해 충돌이 없고, 같은 필드의 수정은 마지막 쓰기가 이기되 이전 값을 기록에 남긴다.</li>
+          <li>로그인 토큰의 클레임에 소속 가정 ID 목록을 넣어 정책이 서브쿼리 없이 비교하게 한다. 가정 가입·탈퇴 시 토큰을 갱신한다.</li>
+          <li>모든 상태 칩에 텍스트(D-3, D+2 지남)와 점 아이콘을 함께 넣는다. 색은 보조 신호다. 본문 대비 4.5:1 이상을 검증 절에서 확인한다.</li>
+          <li>업로드 전 긴 변 1280px, WebP 80%로 압축한다. 품목 하나에 사진 한 장만 허용한다.</li>
+          <li>사전은 버전을 가진다. 품목은 등록 시점의 사전 버전과 계산된 일수를 함께 저장해, 사전이 바뀌어도 기존 품목은 유지되고 "새 기준 적용" 버튼으로만 바뀐다.</li>
+          <li>공용 표 쓰기는 서버 함수만 할 수 있다. 가정의 바코드 매핑은 가정 표에 쓰고, 여러 가정이 같은 매핑을 만들면 서버가 공용 카탈로그 후보로 올린다.</li>
+          <li>터치 타깃 최소 44pt, 시스템 글꼴 크기 확대 200%까지 레이아웃 유지, 모든 아이콘 버튼에 접근성 라벨.</li>
+        </ul></div>
+      </div>
+      <div class="tags"><span class="tag on">아키텍처 변경</span><span class="tag on">접근성은 디자인 시스템에 고정</span></div>
+    </div>
+  </div>
+
+  <div class="delta" style="margin-top:28px">
+    <h3>2차 설계에서 바뀐 것 요약</h3>
+    <ol>
+      <li>품목 상태에 "해동됨" 추가, 수량 유형(개수·용량) 분리, "기한 관리 안 함" 플래그, 기한 근거 뱃지.</li>
+      <li>수량 변경을 증감 이벤트로 기록하는 이벤트 기반 동기화. 오프라인과 동시 편집을 한 가지 방식으로 해결.</li>
+      <li>역할 3종(관리자·구성원·보기 전용), 먹은 사람 표시 스위치, 요약형 활동 피드.</li>
+      <li>등록 흐름 재설계: 다시 샀어요 칩, 날짜 칩, 장본 날 모드, 중복 합치기, 전역 검색, 5초 되돌리기.</li>
+      <li>알림을 아침 묶음 요약 1회로 바꾸고 바로 처리 액션, 정리 카드, 주간 카드 추가.</li>
+      <li>사전 버전 관리, 토큰 클레임 기반 권한 검사, 사진 압축, 공용 표 쓰기 제한.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ───────────── 2. 추가 기능 ───────────── -->
+<section id="features">
+  <div class="sec-head">
+    <span class="eyebrow">02 · 추가 시스템과 편의 기능</span>
+    <h2>스무 가지 후보, 네 단계로 분류</h2>
+    <p class="lead">가치는 "가족이 매주 쓰는가", 비용은 "외부 의존성과 구현 주수"로 봤습니다. MVP는 첫 출시, 2차는 출시 후 3개월, 3차는 사용 데이터를 본 뒤, 보류는 가치 대비 비용이 맞지 않는 것입니다.</p>
+  </div>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>기능</th><th>무엇을 해결하나</th><th>가치</th><th>비용</th><th>판정</th></tr></thead>
+    <tbody>
+      <tr><td>다시 샀어요 칩</td><td>매주 같은 품목 재등록을 3탭으로</td><td>매우 높음</td><td>낮음</td><td><span class="pill mvp">MVP</span></td></tr>
+      <tr><td>장본 날 모드</td><td>10개 연속 등록 시 화면 왕복 제거</td><td>높음</td><td>낮음</td><td><span class="pill mvp">MVP</span></td></tr>
+      <tr><td>전역 검색 "어디 있지"</td><td>칸을 뒤지지 않고 위치 찾기</td><td>높음</td><td>낮음</td><td><span class="pill mvp">MVP</span></td></tr>
+      <tr><td>5초 되돌리기</td><td>오탭으로 인한 데이터 손실</td><td>높음</td><td>낮음</td><td><span class="pill mvp">MVP</span></td></tr>
+      <tr><td>중복 합치기 제안</td><td>같은 품목 행이 둘로 갈라지는 문제</td><td>중간</td><td>낮음</td><td><span class="pill mvp">MVP</span></td></tr>
+      <tr><td>아침 요약 + 알림 액션</td><td>알림 피로, 처리까지의 거리</td><td>매우 높음</td><td>중간</td><td><span class="pill mvp">MVP</span></td></tr>
+      <tr><td>바코드 스캔 + 가정 매핑</td><td>가공식품 이름 입력 생략</td><td>중간</td><td>중간 (식약처 API, 카메라)</td><td><span class="pill p2">2차</span></td></tr>
+      <tr><td>인쇄 날짜 OCR</td><td>포장 소비기한 타이핑 생략</td><td>높음</td><td>중간 (ML Kit)</td><td><span class="pill p2">2차</span></td></tr>
+      <tr><td>홈 화면·잠금화면 위젯</td><td>앱을 열지 않고 오늘 먹을 것 확인</td><td>높음</td><td>중간</td><td><span class="pill p2">2차</span></td></tr>
+      <tr><td>임박 재료 요리 제안</td><td>"이걸로 뭐 하지"의 결정 비용</td><td>높음</td><td>중간 (LLM API, 토큰 비용)</td><td><span class="pill p2">2차</span></td></tr>
+      <tr><td>주간 카드·버림 통계</td><td>행동 변화의 피드백</td><td>중간</td><td>낮음</td><td><span class="pill p2">2차</span></td></tr>
+      <tr><td>구성원별 알레르기·식이 태그</td><td>아이 알레르기 품목 경고, 채식 구성원 구분</td><td>중간</td><td>낮음</td><td><span class="pill p2">2차</span></td></tr>
+      <tr><td>가정 덮어쓰기 통계로 공용 사전 개선</td><td>기본값이 현실과 멀어지는 문제</td><td>중간</td><td>중간 (서버 배치)</td><td><span class="pill p2">2차</span></td></tr>
+      <tr><td>주간 식단 계획 → 재료 자동 차감</td><td>식단과 재고의 연결</td><td>중간</td><td>높음</td><td><span class="pill p3">3차</span></td></tr>
+      <tr><td>영수증 사진 일괄 등록</td><td>장본 날 등록 전체 생략</td><td>높음</td><td>높음 (OCR 정확도, 품목명 정규화)</td><td><span class="pill p3">3차</span></td></tr>
+      <tr><td>음성 등록</td><td>손에 물 묻은 채 등록</td><td>중간</td><td>중간</td><td><span class="pill p3">3차</span></td></tr>
+      <tr><td>24시간 읽기 전용 링크</td><td>도우미, 손님, 잠깐 들른 가족</td><td>낮음</td><td>중간 (토큰 발급·만료)</td><td><span class="pill p3">3차</span></td></tr>
+      <tr><td>명절 모드(임시 칸, 대량 등록)</td><td>명절 전후 냉장고 폭증</td><td>낮음 (연 2회)</td><td>중간</td><td><span class="pill p3">3차</span></td></tr>
+      <tr><td>스마트 냉장고 연동</td><td>문 열림·온도·내부 카메라</td><td>낮음 (보급률)</td><td>매우 높음 (제조사별 API)</td><td><span class="pill hold">보류</span></td></tr>
+      <tr><td>자동 재주문·커머스 연동</td><td>장보기 목록을 바로 주문</td><td>중간</td><td>매우 높음 (제휴, 결제, 책임)</td><td><span class="pill hold">보류</span></td></tr>
+      <tr><td>가계부 연동(구매 가격 입력)</td><td>식비 통계</td><td>낮음</td><td>중간 + 입력 비용 증가</td><td><span class="pill hold">보류</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="hint" style="margin-top:12px">보류 세 가지의 공통점은 앱의 핵심인 "등록 비용 줄이기"에 기여하지 않으면서 외부 의존성을 크게 늘린다는 점입니다. 요리 제안만은 토큰 비용이 있지만 임박 품목을 소비하게 만드는 직접 효과가 있어 2차에 넣었습니다.</p>
+</section>
+
+<!-- ───────────── 3. 디자인 시스템 ───────────── -->
+<section id="system">
+  <div class="sec-head">
+    <span class="eyebrow">03 · 디자인 시스템</span>
+    <h2>서늘한 흰색, 냉장 청록, 상태색 네 가지</h2>
+    <p class="lead">주방 조명 아래에서 한 손으로 보는 앱입니다. 바탕은 약간 푸른 기가 도는 흰색, 액센트는 냉장고 내부 조명을 닮은 청록 하나만 씁니다. 상태색은 색만으로 구분하지 않고 항상 텍스트와 점을 함께 둡니다.</p>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <h3>색 토큰</h3>
+      <div class="swatches">
+        <div class="sw"><div class="c" style="background:var(--bg);border-bottom:1px solid var(--line)"></div><div class="t"><b>bg</b>화면 바탕</div></div>
+        <div class="sw"><div class="c" style="background:var(--surface);border-bottom:1px solid var(--line)"></div><div class="t"><b>surface</b>카드</div></div>
+        <div class="sw"><div class="c" style="background:var(--accent)"></div><div class="t"><b>accent</b>주요 동작 · 선택</div></div>
+        <div class="sw"><div class="c" style="background:var(--accent-soft)"></div><div class="t"><b>accent-soft</b>선택 배경</div></div>
+        <div class="sw"><div class="c" style="background:var(--fresh-soft);display:grid;place-items:center;color:var(--fresh);font-weight:600;font-size:13px">D-19</div><div class="t"><b>fresh</b>4일 이상</div></div>
+        <div class="sw"><div class="c" style="background:var(--soon-soft);display:grid;place-items:center;color:var(--soon);font-weight:600;font-size:13px">D-2</div><div class="t"><b>soon</b>3일 이내</div></div>
+        <div class="sw"><div class="c" style="background:var(--over-soft);display:grid;place-items:center;color:var(--over);font-weight:600;font-size:13px">D+2 지남</div><div class="t"><b>over</b>기한 지남</div></div>
+        <div class="sw"><div class="c" style="background:var(--frozen-soft);display:grid;place-items:center;color:var(--frozen);font-weight:600;font-size:13px">냉동 D-160</div><div class="t"><b>frozen</b>냉동 보관</div></div>
+      </div>
+      <p class="hint" style="margin-top:12px">다크 모드는 같은 토큰 이름에 어두운 값을 매핑합니다. 이 페이지를 시스템 설정에서 다크로 바꾸면 프로토타입도 함께 바뀝니다.</p>
+    </div>
+    <div class="card">
+      <h3>글자와 간격</h3>
+      <div class="type-sample">
+        <div class="row"><span>화면 제목 18/600</span><div style="font-family:var(--font-head);font-size:18px;font-weight:600">우리집 냉장고</div></div>
+        <div class="row"><span>품목명 14.5/500</span><div style="font-size:14.5px;font-weight:500">계란 <small style="color:var(--fg-3);font-weight:400">14/30구</small></div></div>
+        <div class="row"><span>보조 12/400</span><div style="font-size:12px;color:var(--fg-3)">냉장실 · 도어 상단 · 엄마 등록</div></div>
+        <div class="row"><span>숫자</span><div class="num" style="font-size:22px;font-weight:600">38 <span style="font-size:12px;color:var(--fg-3);font-weight:400">tabular-nums로 자리 고정</span></div></div>
+      </div>
+      <ul class="list" style="margin-top:14px">
+        <li>간격 4·8·12·16·24. 카드 모서리 16, 칩 999, 버튼 13.</li>
+        <li>터치 타깃 44pt 이상. 목록 행은 56pt, 하단 탭은 48pt.</li>
+        <li>본문 글꼴은 시스템 확대 200%까지 줄바꿈으로 대응. 칩만 한 줄 고정.</li>
+        <li>한국어 UI 글꼴은 IBM Plex Sans KR, 화면 제목만 Hahmlet으로 온기를 준다.</li>
+      </ul>
+    </div>
+    <div class="card" style="grid-column:1/-1">
+      <h3>부품</h3>
+      <div class="gallery">
+        <div><div class="lbl">기한 칩 · 색 + 텍스트 + 점, 근거 뱃지 동반</div>
+          <div class="chips-demo"><span class="chip fresh"><i class="dot"></i>D-19</span><span class="chip soon"><i class="dot"></i>D-1</span><span class="chip soon"><i class="dot"></i>D-day</span><span class="chip over"><i class="dot"></i>D+2 지남</span><span class="chip frozen"><i class="dot"></i>냉동 D-160</span><span class="chip none">관리 안 함</span> <span class="basis">직접</span> <span class="basis">표기</span> <span class="basis">개봉</span> <span class="basis">통상</span></div></div>
+        <div><div class="lbl">버튼 위계 · 화면당 주요 버튼 하나</div>
+          <div class="chips-demo"><button class="btn pri">저장</button><button class="btn">냉동으로 이동</button><button class="btn danger">버림</button><button class="btn sm">+3일</button></div></div>
+        <div><div class="lbl">목록 행 · 왼쪽 분류 타일, 오른쪽 기한 칩</div>
+          <div class="p-card" style="max-width:420px"><div class="row" tabindex="0"><div class="cat">계란</div><div class="txt"><div class="nm">계란 <small>14/30구</small></div><div class="loc">냉장실 · 도어 상단 · 산란 11.01</div></div><span class="chip fresh"><i class="dot"></i>D-37</span></div>
+          <div class="row" tabindex="0"><div class="cat frz">육류</div><div class="txt"><div class="nm">닭가슴살 <small>2팩</small></div><div class="loc">냉동실 · 상단 · 10.20 냉동</div></div><span class="chip frozen"><i class="dot"></i>D-160</span></div></div></div>
+        <div><div class="lbl">빈 상태와 스낵바</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+            <div class="p-card"><div class="empty"><b>야채칸이 비었어요</b><span>장보기 목록에 채소를 추가하거나 다른 칸에서 옮겨 오세요.</span><button class="btn sm">장보기 열기</button></div></div>
+            <div style="position:relative;min-height:120px;background:var(--surface-2);border-radius:16px"><div class="snack" style="bottom:16px">우유를 먹음으로 기록했어요<button>되돌리기</button></div></div>
+          </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 4. 프로토타입 ───────────── -->
+<section id="proto">
+  <div class="sec-head">
+    <span class="eyebrow">04 · 프로토타입</span>
+    <h2>직접 눌러보는 칸칸</h2>
+    <p class="lead">실제 상태를 가진 프로토타입입니다. 품목을 먹고, 버리고, 냉동으로 옮기고, 새로 등록하고, 가정을 전환해 보세요. 기한은 오늘 날짜 기준으로 실제 규칙대로 계산됩니다. 예시 데이터이며 저장되지는 않습니다.</p>
+  </div>
+  <div class="proto">
+    <div class="side" id="sideLeft">
+      <div class="card"><h3>이 화면의 설계 의도</h3><ul class="list" id="intent"></ul></div>
+      <div class="card"><h3>해 볼 것</h3><ul class="list" id="todo"></ul></div>
+    </div>
+
+    <div class="phone" role="region" aria-label="칸칸 앱 프로토타입">
+      <div class="phone-in" id="phone">
+        <div class="status"><span id="clock">9:41</span><span aria-hidden="true">●●● ▮</span></div>
+        <div class="appbar"><div class="hh" id="hhName">김씨네</div><div class="sync"><i></i>동기화됨</div></div>
+        <div class="screen" id="screen"></div>
+        <nav class="tabbar" aria-label="하단 탭">
+          <button data-tab="home" class="on" aria-label="홈"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
+          <button data-tab="fridge" aria-label="냉장고"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 10h12M9 6v2M9 13v3"/></svg>냉장고</button>
+          <button data-tab="add" class="add" aria-label="등록"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>등록</button>
+          <button data-tab="shop" aria-label="장보기"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h8.6a1 1 0 0 0 1-.8L20 8H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>장보기</button>
+          <button data-tab="family" aria-label="가족"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19a6 6 0 0 1 12 0M15 19a4.5 4.5 0 0 1 6 -3.5"/></svg>가족</button>
+        </nav>
+        <div id="overlay"></div>
+        <div id="snackHost"></div>
+      </div>
+    </div>
+
+    <div class="side" id="sideRight">
+      <div class="card"><h3>지금 데이터</h3><dl class="kv" id="dataKv"></dl></div>
+      <div class="card"><h3>최근 이벤트 로그</h3><p class="hint" style="margin-bottom:8px">서버로 보내질 증감 이벤트입니다. 절대값이 아니라 변화량만 기록됩니다.</p><div class="feed" id="log"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 5. 검증 ───────────── -->
+<section id="verify">
+  <div class="sec-head">
+    <span class="eyebrow">05 · 검증</span>
+    <h2>휴리스틱, 과업 흐름, 대비, 경계 조건</h2>
+    <p class="lead">위 프로토타입을 대상으로 측정했습니다. 탭 수는 하단 탭 전환을 포함하고 글자 입력은 따로 셉니다. 실제 사용자 테스트는 아직 하지 않았으며, 그 항목은 마지막에 따로 적었습니다.</p>
+  </div>
+  <div class="grid g2">
+    <div class="card" style="grid-column:1/-1">
+      <h3>과업 흐름과 탭 수</h3>
+      <div class="scroll" style="border:0"><table class="tbl">
+        <thead><tr><th>과업</th><th>경로</th><th>탭</th><th>입력</th><th>목표</th><th>결과</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>자주 사는 품목 재등록</td><td>등록 탭 → 다시 샀어요 칩 → 저장</td><td class="num">3</td><td>없음</td><td class="num">≤4</td><td><span class="pill ok">달성</span></td><td><button class="flow-btn" data-flow="add">해보기</button></td></tr>
+          <tr><td>처음 사는 품목 등록</td><td>등록 탭 → 이름 2글자 → 제안 선택 → 저장</td><td class="num">3</td><td>2글자</td><td class="num">≤5</td><td><span class="pill ok">달성</span></td><td><button class="flow-btn" data-flow="add">해보기</button></td></tr>
+          <tr><td>먹음 처리</td><td>홈의 품목 → 1개 먹음</td><td class="num">2</td><td>없음</td><td class="num">≤2</td><td><span class="pill ok">달성</span></td><td><button class="flow-btn" data-flow="home">해보기</button></td></tr>
+          <tr><td>어디 있는지 찾기</td><td>냉장고 탭 → 검색창 → 2글자</td><td class="num">2</td><td>2글자</td><td class="num">≤3</td><td><span class="pill ok">달성</span></td><td><button class="flow-btn" data-flow="fridge">해보기</button></td></tr>
+          <tr><td>냉장에서 냉동으로 이동</td><td>품목 → 냉동으로 이동</td><td class="num">2</td><td>없음</td><td class="num">≤3</td><td><span class="pill ok">달성</span></td><td><button class="flow-btn" data-flow="fridge">해보기</button></td></tr>
+          <tr><td>기한 3일 연장</td><td>품목 → +3일</td><td class="num">2</td><td>없음</td><td class="num">≤3</td><td><span class="pill ok">달성</span></td><td></td></tr>
+          <tr><td>장본 것 냉장고에 넣기</td><td>장보기 탭 → 체크 → 넣기 → 저장</td><td class="num">4</td><td>없음</td><td class="num">≤4</td><td><span class="pill ok">달성</span></td><td><button class="flow-btn" data-flow="shop">해보기</button></td></tr>
+          <tr><td>가정 전환</td><td>가족 탭 → 가정 선택</td><td class="num">2</td><td>없음</td><td class="num">≤2</td><td><span class="pill ok">달성</span></td><td><button class="flow-btn" data-flow="family">해보기</button></td></tr>
+          <tr><td>칸 이름 바꾸기</td><td>가족 탭 → 칸 구성 → 칸 → 이름</td><td class="num">4</td><td>이름</td><td class="num">≤4</td><td><span class="pill warn">프로토타입 밖</span></td><td></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>휴리스틱 평가 (닐슨 10)</h3>
+      <div class="scroll" style="border:0"><table class="tbl">
+        <thead><tr><th>원칙</th><th>판정</th><th>근거 · 조치</th></tr></thead>
+        <tbody>
+          <tr><td>시스템 상태 가시성</td><td><span class="pill ok">충족</span></td><td>기한 근거 뱃지, 상단 동기화 점, 저장 후 스낵바</td></tr>
+          <tr><td>현실 세계와의 일치</td><td><span class="pill ok">충족</span></td><td>칸 이름이 실제 냉장고 용어, D-day 표기, 산란일 필드</td></tr>
+          <tr><td>사용자 통제와 자유</td><td><span class="pill ok">충족</span></td><td>모든 차감·삭제 5초 되돌리기, 시트는 바깥 탭으로 닫힘</td></tr>
+          <tr><td>일관성과 표준</td><td><span class="pill ok">충족</span></td><td>상태색 4종 고정, 하단 탭 고정, 주요 버튼 화면당 하나</td></tr>
+          <tr><td>오류 예방</td><td><span class="pill warn">부분</span></td><td>중복 합치기, 해동 재냉동 경고 반영. 칸 삭제 시 품목 이동 흐름은 미설계</td></tr>
+          <tr><td>재인보다 인식</td><td><span class="pill ok">충족</span></td><td>자동완성, 다시 샀어요 칩, 날짜 칩</td></tr>
+          <tr><td>유연성과 효율성</td><td><span class="pill ok">충족</span></td><td>장본 날 모드, 전역 검색, 알림 액션</td></tr>
+          <tr><td>심미적·최소 디자인</td><td><span class="pill warn">부분</span></td><td>홈 피드는 접힘 기본. 등록 폼의 고급 항목(표기 기한, 산란일)은 접기 필요</td></tr>
+          <tr><td>오류 인식·복구</td><td><span class="pill ok">충족</span></td><td>오프라인 큐 실패 시 상단 배너와 재시도, 폴백 기준 표기</td></tr>
+          <tr><td>도움말</td><td><span class="pill warn">부분</span></td><td>첫 실행 3단계(가정 만들기 → 칸 템플릿 → 첫 품목) 온보딩은 설계만 있고 프로토타입 밖</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>색 대비 (라이트 모드, 텍스트/배경)</h3>
+      <div class="scroll" style="border:0"><table class="tbl">
+        <thead><tr><th>요소</th><th>대비</th><th>기준</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>신선 칩</td><td class="num">5.4 : 1</td><td class="num">4.5</td><td><span class="pill ok">AA</span></td></tr>
+          <tr><td>임박 칩</td><td class="num">5.5 : 1</td><td class="num">4.5</td><td><span class="pill ok">AA</span></td></tr>
+          <tr><td>지남 칩</td><td class="num">5.6 : 1</td><td class="num">4.5</td><td><span class="pill ok">AA</span></td></tr>
+          <tr><td>냉동 칩</td><td class="num">5.1 : 1</td><td class="num">4.5</td><td><span class="pill ok">AA</span></td></tr>
+          <tr><td>액센트 버튼 글자</td><td class="num">4.9 : 1</td><td class="num">4.5</td><td><span class="pill ok">AA</span></td></tr>
+          <tr><td>보조 텍스트</td><td class="num">5.7 : 1</td><td class="num">4.5</td><td><span class="pill ok">AA</span></td></tr>
+          <tr><td>힌트 텍스트</td><td class="num">4.0 : 1</td><td class="num">3.0 (보조)</td><td><span class="pill ok">통과</span></td></tr>
+        </tbody>
+      </table></div>
+      <p class="hint" style="margin-top:10px">1차 색안에서 임박 칩은 3.4:1, 신선 칩은 4.3:1로 미달이어서 글자색을 한 단계씩 어둡게 조정했습니다. 다크 모드는 같은 방식으로 검산이 필요합니다.</p>
+    </div>
+    <div class="card">
+      <h3>경계 조건 점검</h3>
+      <ul class="list">
+        <li><b>자정 통과</b>: 기한은 날짜만 저장, D-day는 기기 지역 날짜로 계산. 프로토타입도 같은 방식.</li>
+        <li><b>수량 0</b>: 품목이 사라지고 장보기에 자동 추가. 되돌리면 둘 다 복구.</li>
+        <li><b>동시 차감</b>: 증감 이벤트 합산. 프로토타입의 로그 패널에서 이벤트 형태 확인 가능.</li>
+        <li><b>기한 없음 품목</b>: 회색 칩, 집계·알림 제외. 간장으로 확인.</li>
+        <li><b>가정 전환</b>: 모든 화면, 검색 결과, 장보기, 설정이 가정 단위로 바뀜. 자취방에서 김씨네 품목은 검색되지 않음.</li>
+        <li><b>냉동 이동</b>: 이동일 기준으로 냉동 일수 재계산, 칩이 냉동색으로 전환.</li>
+        <li><b>해동</b>: 냉동 품목을 냉장으로 꺼내면 "해동됨" 상태와 24시간 기한. 다시 냉동 시 경고.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>이 검증이 다루지 못한 것</h3>
+      <ul class="list">
+        <li>실제 가족 3곳 이상의 사용성 테스트. 특히 60대 이상 사용자의 글꼴 확대 환경.</li>
+        <li>푸시 알림과 알림 액션, 카메라(바코드·OCR), 오프라인 동기화는 네이티브 빌드에서만 검증 가능.</li>
+        <li>식품 사전 기본값의 출처 검증. 식약처 소비기한 참고값과 대조해야 하며, 프로토타입의 일수는 예시.</li>
+        <li>다크 모드 대비 수치 검산과 색각 이상 시뮬레이션.</li>
+        <li>행 수준 보안 정책의 실제 부하 테스트(가정 1만 곳, 품목 50만 건 기준).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ───── 날짜 유틸 ───── */
+const today=(()=>{const d=new Date();d.setHours(0,0,0,0);return d;})();
+const iso=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${dd}`;};
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d);};
+const ago=n=>addDays(iso(today),-n);
+const ahead=n=>addDays(iso(today),n);
+const diffDays=s=>Math.round((parse(s)-today)/86400000);
+const fmt=s=>{const d=parse(s);return `${d.getMonth()+1}.${String(d.getDate()).padStart(2,'0')}`;};
+const TODAY=iso(today);
+
+/* ───── 공용 식품 사전 (예시 값) ───── */
+const PRESETS={
+  egg:{name:'계란',cat:'계란',unit:'구',qty:30,type:'count',fridge:45,freezer:null,opened:null,base:'산란일',store:'fridge',hint:'door'},
+  milk:{name:'우유',cat:'유제품',unit:'팩',qty:1,type:'amount',fridge:10,freezer:null,opened:7,store:'fridge',hint:'door'},
+  tofu:{name:'두부',cat:'두부',unit:'모',qty:1,type:'count',fridge:7,freezer:null,opened:3,store:'fridge',hint:'dairy'},
+  yogurt:{name:'요거트',cat:'유제품',unit:'개',qty:4,type:'count',fridge:14,freezer:null,opened:3,store:'fridge',hint:'dairy'},
+  cheese:{name:'슬라이스치즈',cat:'유제품',unit:'장',qty:10,type:'count',fridge:60,freezer:180,opened:14,store:'fridge',hint:'dairy'},
+  pork:{name:'돼지고기 앞다리',cat:'육류',unit:'g',qty:600,type:'amount',fridge:3,freezer:90,opened:null,store:'fridge',hint:'meat'},
+  chicken:{name:'닭가슴살',cat:'육류',unit:'팩',qty:2,type:'count',fridge:2,freezer:180,opened:null,store:'fridge',hint:'meat'},
+  salmon:{name:'연어',cat:'생선',unit:'팩',qty:1,type:'count',fridge:2,freezer:60,opened:null,store:'fridge',hint:'meat'},
+  lettuce:{name:'상추',cat:'채소',unit:'봉',qty:1,type:'amount',fridge:5,freezer:null,opened:null,store:'fridge',hint:'veg'},
+  onion:{name:'양파',cat:'채소',unit:'개',qty:5,type:'count',fridge:30,freezer:null,opened:null,store:'fridge',hint:'veg'},
+  carrot:{name:'당근',cat:'채소',unit:'개',qty:3,type:'count',fridge:21,freezer:null,opened:null,store:'fridge',hint:'veg'},
+  apple:{name:'사과',cat:'과일',unit:'개',qty:6,type:'count',fridge:30,freezer:null,opened:null,store:'fridge',hint:'veg'},
+  berry:{name:'블루베리',cat:'과일',unit:'팩',qty:1,type:'amount',fridge:5,freezer:180,opened:null,store:'fridge',hint:'veg'},
+  rice:{name:'냉동밥',cat:'곡물',unit:'개',qty:6,type:'count',fridge:2,freezer:30,opened:null,store:'freezer',hint:'frz'},
+  dumpling:{name:'만두',cat:'냉동식품',unit:'봉',qty:1,type:'amount',fridge:3,freezer:270,opened:null,store:'freezer',hint:'frz'},
+  icecream:{name:'아이스크림',cat:'냉동식품',unit:'개',qty:4,type:'count',fridge:null,freezer:180,opened:null,store:'freezer',hint:'frz'},
+  kimchi:{name:'배추김치',cat:'김치',unit:'통',qty:1,type:'amount',fridge:90,freezer:null,opened:null,store:'kimchi',hint:'kim'},
+  ketchup:{name:'케첩',cat:'소스',unit:'개',qty:1,type:'amount',fridge:365,freezer:null,opened:180,store:'fridge',hint:'door'},
+  soy:{name:'간장',cat:'장류',unit:'병',qty:1,type:'amount',fridge:null,freezer:null,opened:null,noExpiry:true,store:'fridge',hint:'door'},
+  anchovy:{name:'멸치볶음',cat:'반찬',unit:'통',qty:1,type:'amount',fridge:7,freezer:30,opened:null,store:'fridge',hint:'side'},
+  eggroll:{name:'계란말이',cat:'반찬',unit:'통',qty:1,type:'amount',fridge:3,freezer:null,opened:null,store:'fridge',hint:'side'},
+  cola:{name:'콜라',cat:'음료',unit:'캔',qty:6,type:'count',fridge:365,freezer:null,opened:1,store:'fridge',hint:'door'},
+  instantrice:{name:'즉석밥',cat:'곡물',unit:'개',qty:6,type:'count',fridge:365,freezer:null,opened:null,store:'fridge',hint:'dairy'},
+};
+
+/* ───── 가정별 데이터 (완전 분리) ───── */
+let uid=100;
+const mk=(preset,o)=>Object.assign({id:'i'+(uid++),preset,status:'cold',opened:null,printed:null,manual:null,base:null,frozenAt:null,by:'엄마'},o);
+const DATA={
+  A:{name:'김씨네',tz:'Asia/Seoul',showEater:true,
+     members:[{n:'아빠',r:'관리자'},{n:'엄마',r:'구성원'},{n:'지우',r:'구성원'},{n:'민준',r:'보기 전용'}],
+     overrides:{egg:{fridge:45}},
+     storages:[
+       {id:'fridge',name:'냉장실',comps:[{id:'f1',name:'1단 · 반찬',hint:'side'},{id:'f2',name:'2단 · 유제품',hint:'dairy'},{id:'f3',name:'3단 · 육류/생선',hint:'meat'},{id:'f4',name:'야채칸',hint:'veg'}],door:[{id:'d1',name:'도어 상단',hint:'door'},{id:'d2',name:'도어 중단',hint:'door2'},{id:'d3',name:'도어 하단',hint:'door3'}]},
+       {id:'freezer',name:'냉동실',comps:[{id:'z1',name:'상단',hint:'frz'},{id:'z2',name:'하단',hint:'frz2'}],door:[{id:'zd',name:'도어',hint:'frzd'}]},
+       {id:'kimchi',name:'김치냉장고',comps:[{id:'k1',name:'왼쪽 칸',hint:'kim'},{id:'k2',name:'오른쪽 칸',hint:'kim2'}],door:[]}
+     ],
+     items:[
+       mk('milk',{qty:1,store:'fridge',comp:'d1',purchased:ago(8),printed:ahead(0),opened:ago(6),by:'아빠'}),
+       mk('tofu',{qty:1,store:'fridge',comp:'f2',purchased:ago(5),printed:ahead(1)}),
+       mk('eggroll',{qty:1,store:'fridge',comp:'f1',purchased:ago(2),by:'엄마'}),
+       mk('yogurt',{qty:3,store:'fridge',comp:'f2',purchased:ago(12),printed:ahead(2),by:'지우'}),
+       mk('carrot',{qty:2,store:'fridge',comp:'f4',purchased:ago(18)}),
+       mk('pork',{qty:600,store:'fridge',comp:'f3',purchased:ago(4),by:'아빠'}),
+       mk('lettuce',{qty:1,store:'fridge',comp:'f4',purchased:ago(9)}),
+       mk('egg',{qty:14,store:'fridge',comp:'d1',purchased:ago(6),base:ago(8)}),
+       mk('onion',{qty:4,store:'fridge',comp:'f4',purchased:ago(9)}),
+       mk('apple',{qty:5,store:'fridge',comp:'f4',purchased:ago(6),by:'민준'}),
+       mk('cheese',{qty:8,store:'fridge',comp:'f2',purchased:ago(20),printed:ahead(40),opened:ago(4)}),
+       mk('anchovy',{qty:1,store:'fridge',comp:'f1',purchased:ago(2)}),
+       mk('ketchup',{qty:1,store:'fridge',comp:'d2',purchased:ago(120),printed:ahead(200),opened:ago(100)}),
+       mk('soy',{qty:1,store:'fridge',comp:'d3',purchased:ago(200)}),
+       mk('cola',{qty:4,store:'fridge',comp:'d3',purchased:ago(10),printed:ahead(300)}),
+       mk('chicken',{qty:2,store:'freezer',comp:'z1',purchased:ago(21),frozenAt:ago(20),status:'frozen',by:'아빠'}),
+       mk('rice',{qty:5,store:'freezer',comp:'z1',purchased:ago(10),frozenAt:ago(10),status:'frozen'}),
+       mk('dumpling',{qty:1,store:'freezer',comp:'z2',purchased:ago(30),frozenAt:ago(30),status:'frozen',printed:ahead(200)}),
+       mk('icecream',{qty:3,store:'freezer',comp:'zd',purchased:ago(15),frozenAt:ago(15),status:'frozen',by:'지우'}),
+       mk('berry',{qty:1,store:'freezer',comp:'z2',purchased:ago(40),frozenAt:ago(39),status:'frozen'}),
+       mk('kimchi',{qty:1,store:'kimchi',comp:'k1',purchased:ago(25)}),
+       mk('kimchi',{qty:1,store:'kimchi',comp:'k2',purchased:ago(70),manual:ahead(5),by:'아빠'}),
+     ],
+     shopping:[{id:'s1',name:'두부',checked:false,by:'엄마',auto:false},{id:'s2',name:'상추',checked:false,by:'엄마',auto:true},{id:'s3',name:'우유',checked:false,by:'지우',auto:false}],
+     recent:['egg','milk','tofu'],
+     notif:{morning:'07:30',perItem:false,quiet:true,target:'all'}
+  },
+  B:{name:'자취방',tz:'Asia/Seoul',showEater:false,
+     members:[{n:'지우',r:'관리자'}],
+     overrides:{egg:{fridge:30}},
+     storages:[
+       {id:'fridge',name:'냉장실',comps:[{id:'f1',name:'위 칸',hint:'dairy'},{id:'f2',name:'아래 칸',hint:'veg'}],door:[{id:'d1',name:'도어',hint:'door'}]},
+       {id:'freezer',name:'냉동실',comps:[{id:'z1',name:'한 칸',hint:'frz'}],door:[]}
+     ],
+     items:[
+       mk('milk',{qty:1,store:'fridge',comp:'d1',purchased:ago(3),printed:ahead(4),by:'지우'}),
+       mk('egg',{qty:10,store:'fridge',comp:'d1',purchased:ago(2),by:'지우'}),
+       mk('instantrice',{qty:4,store:'fridge',comp:'f1',purchased:ago(30),printed:ahead(150),by:'지우'}),
+       mk('dumpling',{qty:1,store:'freezer',comp:'z1',purchased:ago(12),frozenAt:ago(12),status:'frozen',printed:ahead(240),by:'지우'}),
+       mk('cola',{qty:2,store:'fridge',comp:'d1',purchased:ago(5),printed:ahead(280),by:'지우'}),
+       mk('kimchi',{qty:1,store:'fridge',comp:'f2',purchased:ago(14),by:'지우'}),
+     ],
+     shopping:[{id:'s9',name:'계란',checked:false,by:'지우',auto:false}],
+     recent:['milk','egg','instantrice'],
+     notif:{morning:'08:30',perItem:false,quiet:true,target:'all'}
+  }
+};
+
+/* ───── 상태 ───── */
+const S={hh:'A',tab:'home',store:'fridge',comp:null,q:'',filter:null,sheet:null,batch:false,batchCount:0,undo:null,feedOpen:false,
+  form:null,log:[]};
+const hh=()=>DATA[S.hh];
+const me=()=>hh().members[1]?hh().members[1].n:hh().members[0].n;
+
+/* ───── 기한 계산 (우선순위 규칙) ───── */
+function presetDays(preset,field){const p=PRESETS[preset];const ov=(hh().overrides[preset]||{});return ov[field]!=null?ov[field]:p[field];}
+function expiryOf(it){
+  const p=PRESETS[it.preset];
+  if(p.noExpiry) return {date:null,basis:'관리 안 함',cls:'none',label:'관리 안 함'};
+  if(it.manual) return finish(it.manual,'직접',it);
+  if(it.status==='thawed'&&it.thawedAt) return finish(addDays(it.thawedAt,1),'해동',it);
+  const cands=[];
+  if(it.status==='frozen'||it.store==='freezer'){
+    const fd=presetDays(it.preset,'freezer');
+    const base=it.frozenAt||it.purchased||TODAY;
+    if(fd) cands.push({date:addDays(base,fd),basis:'냉동 통상'});
+    if(it.printed&&!it.frozenAt) cands.push({date:it.printed,basis:'표기'});
+  }else{
+    if(it.printed) cands.push({date:it.printed,basis:'표기'});
+    const od=presetDays(it.preset,'opened');
+    if(it.opened&&od) cands.push({date:addDays(it.opened,od),basis:'개봉'});
+    if(!it.printed){const fd=presetDays(it.preset,'fridge');const base=it.base||it.purchased||TODAY;const b=it.base?'통상':(it.purchased?'통상':'등록일 기준');if(fd) cands.push({date:addDays(base,fd),basis:b});}
+  }
+  if(!cands.length) return {date:null,basis:'기준 없음',cls:'none',label:'기한 없음'};
+  cands.sort((a,b)=>parse(a.date)-parse(b.date));
+  return finish(cands[0].date,cands[0].basis,it);
+}
+function finish(date,basis,it){
+  const d=diffDays(date);let cls,label;
+  const frozen=it.status==='frozen';
+  if(d<0){cls='over';label=`D+${-d} 지남`;}
+  else if(d===0){cls='soon';label='D-day';}
+  else if(d<=3){cls='soon';label=`D-${d}`;}
+  else {cls=frozen?'frozen':'fresh';label=(frozen?'냉동 ':'')+`D-${d}`;}
+  if(frozen&&d>3) cls='frozen';
+  return {date,basis,cls,label,d};
+}
+const chipHtml=e=>`<span class="chip ${e.cls}"><i class="dot"></i>${e.label}</span>`;
+const catHtml=it=>`<div class="cat ${it.status==='frozen'?'frz':''}">${PRESETS[it.preset].cat.slice(0,2)}</div>`;
+function locOf(it){const st=hh().storages.find(s=>s.id===it.store);if(!st)return '';const c=[...st.comps,...st.door].find(c=>c.id===it.comp);return `${st.name} · ${c?c.name:''}`;}
+function qtyText(it){const p=PRESETS[it.preset];return `${it.qty}${p.unit}${it.half?' · 절반 남음':''}`;}
+function eaterText(it){return hh().showEater?`${it.by} 등록`:'';}
+
+/* ───── 로그·되돌리기·스낵바 ───── */
+function snapshot(){return JSON.stringify({items:hh().items,shopping:hh().shopping});}
+function logEvent(type,payload){S.log.unshift({t:new Date(),type,payload,hh:hh().name});S.log=S.log.slice(0,8);renderLog();}
+function snack(msg,undoSnap){
+  const host=document.getElementById('snackHost');
+  host.innerHTML=`<div class="snack" role="status">${msg}${undoSnap?'<button data-action="undo">되돌리기</button>':''}</div>`;
+  S.undo=undoSnap||null;
+  clearTimeout(snack.t);snack.t=setTimeout(()=>{host.innerHTML='';S.undo=null;},5000);
+}
+function doUndo(){if(!S.undo)return;const s=JSON.parse(S.undo);hh().items=s.items;hh().shopping=s.shopping;S.undo=null;document.getElementById('snackHost').innerHTML='';logEvent('undo',{});render();}
+
+/* ───── 렌더 ───── */
+const $=sel=>document.querySelector(sel);
+function render(){
+  $('#hhName').textContent=hh().name;
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab&&!b.classList.contains('add')));
+  const sc=$('#screen');
+  const r={home:renderHome,fridge:renderFridge,add:renderAdd,shop:renderShop,family:renderFamily}[S.tab];
+  sc.innerHTML=r();
+  renderSheet();renderSide();renderKv();
+  if(S.tab==='add'){const i=$('#nameInp');if(i&&S.form.focus){i.focus();S.form.focus=false;}}
+}
+function itemRow(it,extra){
+  const e=expiryOf(it);const p=PRESETS[it.preset];
+  const sub=[locOf(it)];
+  if(it.base)sub.push(`${p.base} ${fmt(it.base)}`);else if(it.opened)sub.push(`개봉 ${fmt(it.opened)}`);else if(it.frozenAt)sub.push(`${fmt(it.frozenAt)} 냉동`);
+  if(it.status==='thawed')sub.push('해동됨');
+  const who=eaterText(it);
+  return `<div class="row" data-action="open" data-id="${it.id}" tabindex="0" role="button">${catHtml(it)}<div class="txt"><div class="nm">${p.name} <small>${qtyText(it)}</small>${who?`<small>· ${who}</small>`:''}</div><div class="loc">${sub.join(' · ')}</div></div>${chipHtml(e)}</div>`;
+}
+function stats(){const items=hh().items.map(it=>({it,e:expiryOf(it)})).filter(x=>x.e.date);return{over:items.filter(x=>x.e.d<0).length,soon:items.filter(x=>x.e.d>=0&&x.e.d<=3).length,all:hh().items.length};}
+function renderHome(){
+  const st=stats();
+  const list=hh().items.map(it=>({it,e:expiryOf(it)})).filter(x=>x.e.date&&x.e.d<=3).sort((a,b)=>a.e.d-b.e.d);
+  const over=list.filter(x=>x.e.d<0),soon=list.filter(x=>x.e.d>=0);
+  const stale=over.filter(x=>x.e.d<=-3);
+  const feed=S.log.filter(l=>l.hh===hh().name).slice(0,3);
+  return `
+  <div class="stats">
+    <div class="stat over" data-action="filter" data-f="over" role="button" tabindex="0"><b class="num">${st.over}</b><span>지남</span></div>
+    <div class="stat soon" data-action="filter" data-f="soon" role="button" tabindex="0"><b class="num">${st.soon}</b><span>3일 이내</span></div>
+    <div class="stat all" data-action="gotab" data-tab="fridge" role="button" tabindex="0"><b class="num">${st.all}</b><span>전체 품목</span></div>
+  </div>
+  ${stale.length?`<div class="p-card" style="border-color:var(--over);background:var(--over-soft)"><div class="p-title" style="color:var(--over)">아직 있나요?<span class="hint" style="color:var(--over)">3일 넘게 지남 ${stale.length}건</span></div><div style="font-size:13.5px;color:var(--over)">${stale.map(x=>PRESETS[x.it.preset].name).join(', ')}</div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" data-action="clearstale">모두 버림으로 정리</button></div></div>`:''}
+  <div class="p-card"><div class="p-title">오늘 먹어야 해요 <span class="hint">${soon.length}건</span></div>
+    ${soon.length?soon.map(x=>itemRow(x.it)).join(''):`<div class="empty"><b>임박한 품목이 없어요</b><span>3일 안에 기한이 오는 것이 없습니다.</span></div>`}
+  </div>
+  ${over.length?`<div class="p-card"><div class="p-title">기한이 지났어요 <span class="hint">${over.length}건</span></div>${over.map(x=>itemRow(x.it)).join('')}</div>`:''}
+  <div class="p-card"><div class="p-title">가족 활동 <a data-action="feed">${S.feedOpen?'접기':'오늘 요약 보기'}</a></div>
+    ${S.feedOpen?`<div class="feed">${feed.length?feed.map(l=>`<span><b>${l.payload.who||me()}</b> · ${describe(l)}</span>`).join(''):'<span>오늘 기록된 활동이 아직 없어요.</span>'}<span>어제 · <b>엄마</b>가 5개 등록, <b>지우</b>가 2개 먹음</span></div>`:`<div class="hint">하루 단위로 요약해서 보여줍니다. 품목마다 알림을 보내지 않습니다.</div>`}
+  </div>`;
+}
+function describe(l){const p=l.payload;switch(l.type){case 'qty':return `${p.name} ${p.delta>0?'+':''}${p.delta}`;case 'waste':return `${p.name} 버림`;case 'add':return `${p.name} 등록`;case 'move':return `${p.name} ${p.to}로 이동`;case 'extend':return `${p.name} 기한 ${p.to}까지`;case 'open':return `${p.name} 개봉`;case 'thaw':return `${p.name} 해동`;case 'undo':return '되돌리기';default:return l.type;}}
+function renderFridge(){
+  const st=hh().storages.find(s=>s.id===S.store)||hh().storages[0];S.store=st.id;
+  const q=S.q.trim();
+  let body;
+  if(q){
+    const res=hh().items.filter(it=>PRESETS[it.preset].name.includes(q)||PRESETS[it.preset].cat.includes(q));
+    body=`<div class="p-card"><div class="p-title">"${q}" 검색 결과 <span class="hint">${res.length}건 · 모든 보관소</span></div>${res.length?res.map(it=>itemRow(it)).join(''):`<div class="empty"><b>없어요</b><span>장보기 목록에 추가할까요?</span><button class="btn sm" data-action="addshop" data-name="${q}">장보기에 추가</button></div>`}</div>`;
+  }else if(S.filter){
+    const res=hh().items.map(it=>({it,e:expiryOf(it)})).filter(x=>x.e.date&&(S.filter==='over'?x.e.d<0:x.e.d>=0&&x.e.d<=3));
+    body=`<div class="p-card"><div class="p-title">${S.filter==='over'?'기한 지남':'3일 이내'} <a data-action="clearfilter">전체 보기</a></div>${res.map(x=>itemRow(x.it)).join('')||'<div class="empty"><b>없어요</b></div>'}</div>`;
+  }else{
+    const comps=st.comps,door=st.door;
+    const count=c=>{const its=hh().items.filter(it=>it.store===st.id&&it.comp===c.id);const es=its.map(expiryOf).filter(e=>e.date);return{n:its.length,over:es.some(e=>e.d<0),soon:es.some(e=>e.d>=0&&e.d<=3)};};
+    const compBtn=c=>{const k=count(c);return `<div class="comp ${S.comp===c.id?'on':''}" data-action="comp" data-id="${c.id}" role="button" tabindex="0"><span>${c.name}</span><span class="n">${k.over?'<i class="over"></i>':''}${k.soon?'<i class="soon"></i>':''}${k.n}</span></div>`;};
+    const sel=S.comp&&[...comps,...door].find(c=>c.id===S.comp);
+    const its=sel?hh().items.filter(it=>it.store===st.id&&it.comp===sel.id):hh().items.filter(it=>it.store===st.id);
+    its.sort((a,b)=>{const ea=expiryOf(a),eb=expiryOf(b);return (ea.d??9999)-(eb.d??9999);});
+    body=`
+    <div class="seg" role="tablist">${hh().storages.map(s=>`<button role="tab" aria-selected="${s.id===S.store}" class="${s.id===S.store?'on':''}" data-action="store" data-id="${s.id}">${s.name}</button>`).join('')}</div>
+    <div class="compgrid" style="${door.length?'':'grid-template-columns:1fr'}"><div class="comps">${comps.map(compBtn).join('')}</div>${door.length?`<div class="door">${door.map(compBtn).join('')}</div>`:''}</div>
+    <div class="p-card"><div class="p-title">${sel?sel.name:st.name+' 전체'} <span class="hint">${its.length}개${sel?' · <a data-action="comp" data-id="">전체</a>':''}</span></div>
+      ${its.length?its.map(it=>itemRow(it)).join(''):`<div class="empty"><b>${sel?sel.name:st.name}이(가) 비었어요</b><span>등록 탭에서 추가하거나 다른 칸에서 옮겨 오세요.</span><button class="btn sm" data-action="gotab" data-tab="add">등록하기</button></div>`}
+    </div>`;
+  }
+  return `<div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="어디 있지? 이름이나 분류로 찾기" value="${S.q}" aria-label="품목 검색"></div>${body}`;
+}
+function emptyForm(){const st=hh().storages[0];const first=[...st.comps,...st.door][0];return{name:'',preset:null,qty:1,unit:'개',store:st.id,comp:first?first.id:null,purchased:TODAY,expiryMode:'auto',manual:'',printed:'',base:'',opened:false,adv:false,focus:false,customConfirmed:false};}
+function applyPreset(key){
+  const p=PRESETS[key];const f=S.form;
+  f.preset=key;f.name=p.name;f.qty=p.qty;f.unit=p.unit;
+  const prev=hh().items.find(it=>it.preset===key);
+  const storeOk=hh().storages.find(s=>s.id===p.store);
+  f.store=prev?prev.store:(storeOk?p.store:'fridge');
+  const st=hh().storages.find(s=>s.id===f.store);
+  const all=[...st.comps,...st.door];
+  f.comp=prev?prev.comp:((all.find(c=>c.hint===p.hint)||all[0]).id);
+  f.expiryMode='auto';f.manual='';f.printed='';f.base='';f.opened=false;
+}
+function previewExpiry(){
+  const f=S.form;if(!f.preset)return null;
+  const fake={preset:f.preset,store:f.store,status:f.store==='freezer'?'frozen':'cold',purchased:f.purchased,base:f.base||null,printed:f.printed||null,opened:f.opened?TODAY:null,manual:null,frozenAt:f.store==='freezer'?f.purchased:null};
+  if(f.expiryMode==='manual'&&f.manual)fake.manual=f.manual;
+  else if(/^\+/.test(f.expiryMode))fake.manual=addDays(TODAY,parseInt(f.expiryMode.slice(1),10));
+  return expiryOf(fake);
+}
+function renderAdd(){
+  if(!S.form)S.form=emptyForm();
+  const f=S.form;const q=f.name.trim();
+  const sugg=(q&&!f.preset&&!f.customConfirmed)?Object.entries(PRESETS).filter(([k,p])=>p.name.includes(q)||p.cat.includes(q)).slice(0,5):[];
+  const st=hh().storages.find(s=>s.id===f.store)||hh().storages[0];
+  const comps=[...st.comps,...st.door];
+  const ev=previewExpiry();
+  const recent=hh().recent.map(k=>PRESETS[k]);
+  return `
+  <div class="p-card"><div class="p-title">다시 샀어요 <span class="hint">최근 등록 · 1탭이면 채워져요</span></div>
+    <div class="chips">${hh().recent.map(k=>`<button data-action="preset" data-key="${k}" class="${f.preset===k?'on':''}">${PRESETS[k].name}</button>`).join('')}</div></div>
+  <div class="field"><label for="nameInp">이름</label><input id="nameInp" class="inp" value="${f.name}" placeholder="두 글자만 쳐도 찾아요" autocomplete="off">
+    ${sugg.length?`<div class="sug">${sugg.map(([k,p])=>`<button data-action="preset" data-key="${k}"><span>${p.name}</span><small>${p.cat} · ${p.noExpiry?'기한 관리 안 함':(p.store==='freezer'?`냉동 ${p.freezer}일`:`냉장 ${presetDays(k,'fridge')}일`)}</small></button>`).join('')}${q.length>=1?`<button data-action="custom"><span>"${q}" 새 품목으로 등록</span><small>사전에 없음</small></button>`:''}</div>`:''}
+  </div>
+  <div class="field"><label>수량</label><div style="display:flex;gap:8px;align-items:center"><div class="stepper"><button data-action="qty" data-d="-1" aria-label="줄이기">−</button><span class="num">${f.qty}${f.unit}</span><button data-action="qty" data-d="1" aria-label="늘리기">+</button></div>${f.preset&&PRESETS[f.preset].type==='amount'?'<span class="hint">용량형 · 절반/다 먹음으로 차감</span>':''}</div></div>
+  <div class="field"><label>보관 위치 <span class="hint">마지막에 둔 칸이 기본</span></label>
+    <div class="seg">${hh().storages.map(s=>`<button data-action="fstore" data-id="${s.id}" class="${s.id===f.store?'on':''}">${s.name}</button>`).join('')}</div>
+    <div class="chips">${comps.map(c=>`<button data-action="fcomp" data-id="${c.id}" class="${c.id===f.comp?'on':''}">${c.name}</button>`).join('')}</div></div>
+  <div class="field"><label>구매일</label><div class="chips">${[0,1,2].map(n=>`<button data-action="fpur" data-n="${n}" class="${f.purchased===ago(n)?'on':''}">${['오늘','어제','그제'][n]}</button>`).join('')}<button data-action="adv" class="${f.adv?'on':''}">직접 입력</button></div>
+    ${f.adv?`<input class="inp" type="date" id="purInp" value="${f.purchased}" aria-label="구매일 직접 입력">`:''}</div>
+  <div class="field"><label>기한</label><div class="chips">${[['auto','자동'],['+3','+3일'],['+7','+1주'],['+14','+2주'],['+30','+1달'],['manual','직접']].map(([k,l])=>`<button data-action="fexp" data-k="${k}" class="${f.expiryMode===k?'on':''}">${l}</button>`).join('')}</div>
+    ${f.expiryMode==='manual'?`<input class="inp" type="date" id="manInp" value="${f.manual}" aria-label="기한 직접 입력">`:''}
+    ${f.preset&&!PRESETS[f.preset].noExpiry?`<div class="toggle" style="border:0;padding:6px 0"><span>개봉한 상태로 등록<small>개봉 후 보관기간이 있으면 더 이른 날짜를 씁니다</small></span><button class="sw-btn ${f.opened?'on':''}" data-action="fopen" role="switch" aria-checked="${f.opened}" aria-label="개봉 상태"></button></div>`:''}
+    ${f.preset&&PRESETS[f.preset].base?`<label for="baseInp" style="margin-top:4px">${PRESETS[f.preset].base} <span class="hint">있으면 이 날짜 기준으로 계산</span></label><input class="inp" type="date" id="baseInp" value="${f.base}">`:''}
+    ${f.preset&&!PRESETS[f.preset].noExpiry&&f.expiryMode==='auto'?`<label for="prInp" style="margin-top:4px">포장에 적힌 소비기한 <span class="hint">선택</span></label><input class="inp" type="date" id="prInp" value="${f.printed}">`:''}
+  </div>
+  ${ev?`<div class="preview"><span class="hint">계산된 기한</span><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>${ev.date?fmt(ev.date)+'까지':ev.label}</b>${chipHtml(ev)}<span class="basis">${ev.basis}</span></div></div>`:''}
+  <div class="toggle"><span>장본 날 모드<small>저장 후 바로 다음 품목 등록${S.batch&&S.batchCount?` · 오늘 ${S.batchCount}개 등록`:''}</small></span><button class="sw-btn ${S.batch?'on':''}" data-action="batch" role="switch" aria-checked="${S.batch}" aria-label="장본 날 모드"></button></div>
+  <button class="btn pri block" data-action="save" ${f.name.trim()?'':'disabled'}>저장</button>`;
+}
+function renderShop(){
+  const l=hh().shopping;const checked=l.filter(s=>s.checked);
+  return `
+  <div class="p-card"><div class="p-title">장보기 <span class="hint">${l.length}개 · 가족 공유</span></div>
+    ${l.length?l.map(s=>`<div class="toggle" style="cursor:pointer" data-action="check" data-id="${s.id}" role="checkbox" aria-checked="${s.checked}" tabindex="0"><span style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:7px;border:2px solid ${s.checked?'var(--accent)':'var(--line-2)'};background:${s.checked?'var(--accent)':'transparent'};display:grid;place-items:center;color:var(--accent-fg);font-size:13px;font-weight:700">${s.checked?'✓':''}</span><span style="${s.checked?'text-decoration:line-through;color:var(--fg-3)':''}">${s.name}<small>${s.auto?'다 먹어서 자동 추가':s.by+' 추가'}</small></span></span></div>`).join(''):`<div class="empty"><b>장보기 목록이 비었어요</b><span>품목을 다 먹으면 자동으로 올라옵니다.</span></div>`}
+  </div>
+  ${checked.length?`<button class="btn pri block" data-action="putin">체크한 ${checked.length}개 냉장고에 넣기</button>`:''}
+  <div class="field"><label for="shopInp">직접 추가</label><div style="display:flex;gap:8px"><input id="shopInp" class="inp" placeholder="예: 참기름"><button class="btn" data-action="shopadd">추가</button></div></div>`;
+}
+function renderFamily(){
+  const h=hh();const n=h.notif;
+  return `
+  <div class="p-card"><div class="p-title">내 가정</div>
+    <div class="seg">${Object.entries(DATA).map(([k,v])=>`<button data-action="hh" data-id="${k}" class="${k===S.hh?'on':''}">${v.name}</button>`).join('')}</div>
+    <p class="hint" style="margin-top:8px">가정을 바꾸면 품목, 칸, 장보기, 설정이 모두 그 가정 것으로 바뀝니다. 다른 가정의 데이터는 서버 정책으로 차단되어 조회 자체가 안 됩니다.</p></div>
+  <div class="p-card"><div class="p-title">구성원 ${h.members.length}명</div>
+    ${h.members.map(m=>`<div class="member"><div class="avatar">${m.n[0]}</div><span>${m.n}</span><span class="role">${m.r}</span></div>`).join('')}
+    <div style="margin-top:12px;display:grid;gap:6px"><span class="hint">초대 코드 · 24시간 뒤 만료</span><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="code">KX7-4P2</span><button class="btn sm" data-action="copy">코드 복사</button></div></div></div>
+  <div class="p-card"><div class="p-title">알림</div>
+    <div class="toggle"><span>아침 요약<small>하루 한 번, 임박·지남을 묶어서</small></span><select class="inp" style="width:auto;min-height:40px;padding:6px 10px" id="morningSel" aria-label="아침 요약 시간">${['06:30','07:00','07:30','08:00','08:30'].map(t=>`<option ${t===n.morning?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="toggle"><span>품목별 개별 알림<small>켜도 하루 최대 2건</small></span><button class="sw-btn ${n.perItem?'on':''}" data-action="notif" data-k="perItem" role="switch" aria-checked="${n.perItem}" aria-label="품목별 알림"></button></div>
+    <div class="toggle"><span>조용한 시간<small>22:00부터 07:00까지 알림 없음</small></span><button class="sw-btn ${n.quiet?'on':''}" data-action="notif" data-k="quiet" role="switch" aria-checked="${n.quiet}" aria-label="조용한 시간"></button></div>
+    <div class="toggle"><span>먹은 사람 표시<small>끄면 "누군가 먹음"으로만 보여요</small></span><button class="sw-btn ${h.showEater?'on':''}" data-action="eater" role="switch" aria-checked="${h.showEater}" aria-label="먹은 사람 표시"></button></div>
+  </div>
+  <div class="p-card"><div class="p-title">식품 사전 덮어쓰기 <span class="hint">이 가정만</span></div>
+    ${Object.entries(h.overrides).map(([k,o])=>`<div class="toggle"><span>${PRESETS[k].name}<small>공용 ${PRESETS[k].fridge}일 → 우리집 ${o.fridge}일 (냉장)</small></span><div class="stepper" style="transform:scale(.85);transform-origin:right"><button data-action="ov" data-k="${k}" data-d="-5" aria-label="5일 줄이기">−</button><span class="num">${o.fridge}일</span><button data-action="ov" data-k="${k}" data-d="5" aria-label="5일 늘리기">+</button></div></div>`).join('')}
+    <p class="hint" style="margin-top:8px">값을 바꾸면 이 가정의 계란 기한이 즉시 다시 계산됩니다. 공용 사전은 바뀌지 않습니다.</p></div>
+  <div class="p-card"><div class="p-title">칸 구성</div>${h.storages.map(s=>`<div class="toggle"><span>${s.name}<small>${[...s.comps,...s.door].map(c=>c.name).join(' · ')}</small></span><span class="hint">관리자만 편집</span></div>`).join('')}</div>`;
+}
+
+/* ───── 시트 ───── */
+function renderSheet(){
+  const ov=$('#overlay');
+  if(!S.sheet){ov.innerHTML='';return;}
+  if(S.sheet.kind==='item'){
+    const it=hh().items.find(i=>i.id===S.sheet.id);if(!it){S.sheet=null;ov.innerHTML='';return;}
+    const p=PRESETS[it.preset];const e=expiryOf(it);
+    const isFrozen=it.status==='frozen';const canFreeze=!isFrozen&&presetDays(it.preset,'freezer');
+    const dd=[['위치',locOf(it)],['수량',qtyText(it)],['구매',it.purchased?fmt(it.purchased):'-']];
+    if(it.base)dd.push([p.base,fmt(it.base)]);if(it.opened)dd.push(['개봉',fmt(it.opened)]);if(it.frozenAt)dd.push(['냉동 시작',fmt(it.frozenAt)]);if(it.printed)dd.push(['표기 기한',fmt(it.printed)]);
+    if(e.date)dd.push(['계산된 기한',`${fmt(e.date)} · ${e.basis}`]);
+    if(hh().showEater)dd.push(['등록',it.by]);
+    const eat=p.type==='count'?`<button class="btn pri" data-action="eat" data-id="${it.id}" data-n="1">1${p.unit} 먹음</button>`:(it.half&&it.qty<=1&&p.unit!=='g'?`<button class="btn pri" data-action="eat" data-id="${it.id}" data-n="all">다 먹음</button>`:`<button class="btn pri" data-action="eat" data-id="${it.id}" data-n="half">절반 먹음</button>`);
+    const eatAll=(p.type==='amount'&&it.half&&it.qty<=1&&p.unit!=='g')?'':`<button class="btn" data-action="eat" data-id="${it.id}" data-n="all">다 먹음</button>`;
+    return ov.innerHTML=`<div class="scrim" data-action="close"><div class="sheet" role="dialog" aria-label="${p.name} 상세"><div class="grab"></div>
+      <h4>${p.name} ${chipHtml(e)}${e.date?`<span class="basis">${e.basis}</span>`:''}</h4>
+      ${it.status==='thawed'?'<div class="hint" style="color:var(--over)">해동된 식품입니다. 24시간 안에 드시고 다시 냉동하지 마세요.</div>':''}
+      <dl class="kv">${dd.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      <div class="actions">${eat}${eatAll}
+        ${!p.noExpiry?`<button class="btn" data-action="extend" data-id="${it.id}" data-n="3">기한 +3일</button>`:''}
+        ${!it.opened&&presetDays(it.preset,'opened')&&!isFrozen?`<button class="btn" data-action="openit" data-id="${it.id}">오늘 개봉함</button>`:''}
+        ${canFreeze?`<button class="btn" data-action="freeze" data-id="${it.id}">냉동으로 이동</button>`:''}
+        ${isFrozen?`<button class="btn" data-action="thaw" data-id="${it.id}">냉장으로 꺼냄(해동)</button>`:''}
+        <button class="btn danger" data-action="waste" data-id="${it.id}">버림</button>
+        <button class="btn" data-action="close">닫기</button>
+      </div></div></div>`;
+  }
+  if(S.sheet.kind==='dup'){
+    const d=S.sheet;const p=PRESETS[d.preset];
+    return ov.innerHTML=`<div class="scrim" data-action="close"><div class="sheet" role="dialog" aria-label="중복 확인"><div class="grab"></div><h4>${p.name}이(가) 이미 있어요</h4><p style="font-size:14px;color:var(--fg-2)">${locOf(d.existing)}에 ${qtyText(d.existing)} 남아 있습니다. 수량을 합칠까요, 따로 등록할까요?</p><div class="actions"><button class="btn pri" data-action="merge">수량 합치기</button><button class="btn" data-action="separate">따로 등록</button></div></div></div>`;
+  }
+  if(S.sheet.kind==='refreeze'){
+    const it=hh().items.find(i=>i.id===S.sheet.id);
+    return ov.innerHTML=`<div class="scrim" data-action="close"><div class="sheet" role="dialog" aria-label="재냉동 경고"><div class="grab"></div><h4 style="color:var(--over)">해동한 식품을 다시 얼리나요?</h4><p style="font-size:14px;color:var(--fg-2)">${PRESETS[it.preset].name}은(는) 해동된 상태입니다. 재냉동하면 품질과 안전이 떨어집니다. 그래도 옮기면 기한을 7일로 짧게 잡습니다.</p><div class="actions"><button class="btn" data-action="close">취소</button><button class="btn danger" data-action="refreeze" data-id="${it.id}">그래도 냉동</button></div></div></div>`;
+  }
+}
+
+/* ───── 사이드 패널 ───── */
+const INTENT={
+  home:{i:['요약 숫자 세 개가 첫 시선. 지남과 임박은 색뿐 아니라 숫자와 단어로도 구분됩니다.','"오늘 먹어야 해요"는 기한순 정렬. 행을 누르면 시트에서 2탭 안에 처리됩니다.','3일 넘게 지난 품목은 "아직 있나요?" 카드로 묶어 한 번에 정리합니다.','가족 활동은 접힌 상태가 기본이고, 열어도 하루 단위 요약만 보입니다.'],
+        t:['우유 행을 눌러 "절반 먹음"을 눌러 보세요. 용량형이라 수량 대신 "절반 남음" 표시가 붙고, 스낵바에서 되돌릴 수 있습니다.','상추는 4일 넘게 지나 "아직 있나요?" 카드에 묶여 있습니다. "모두 버림으로 정리"를 눌러 보세요.','두부를 눌러 "오늘 개봉함"을 누르면 개봉 후 3일 규칙이 적용되어 기한이 당겨지는지 확인하세요.','"지남" 숫자를 누르면 냉장고 탭에서 해당 목록만 보입니다.']},
+  fridge:{i:['보관소 탭(냉장실·냉동실·김치냉장고)과 칸 도식. 칸마다 개수와 임박·지남 점이 보여 어느 칸을 먼저 열지 알 수 있습니다.','검색창은 모든 보관소를 한 번에 찾고 결과에 위치를 적어 줍니다. 없으면 장보기에 바로 추가할 수 있습니다.','냉동 품목은 분류 타일과 칩이 모두 냉동색이라 목록에서 바로 구분됩니다.'],
+        t:['검색창에 "김치"를 쳐 보세요. 김치냉장고 두 칸의 결과가 함께 나옵니다.','3단 육류의 돼지고기를 눌러 "냉동으로 이동"하면 칩이 냉동색 D-89로 바뀝니다.','냉동실 닭가슴살을 "냉장으로 꺼냄"하면 해동 상태와 24시간 기한이 적용되고, 다시 냉동하려 하면 경고가 뜹니다.']},
+  add:{i:['맨 위 "다시 샀어요" 칩은 1탭으로 폼 전체를 채웁니다. 마지막에 둔 칸과 수량까지 기억합니다.','이름은 두 글자 자동완성. 선택 즉시 위치·수량·기한이 채워지고 저장 버튼이 활성화됩니다.','날짜는 피커 대신 칩. 기한 칩을 바꾸면 아래 미리보기가 근거 뱃지와 함께 즉시 바뀝니다.','"장본 날 모드"를 켜면 저장 후 홈으로 가지 않고 빈 폼이 다시 열립니다.'],
+        t:['"계란" 칩 → 저장. 이미 계란이 있으면 "수량을 합칠까요?" 시트가 뜹니다.','"당"을 치고 당근을 고른 뒤 기한 칩 "+1주"를 눌러 미리보기 변화를 보세요.','장본 날 모드를 켜고 두세 개 연속 등록해 보세요. 등록 개수가 올라갑니다.']},
+  shop:{i:['가족 공유 체크리스트. 다 먹어서 자동으로 올라온 항목은 누가 추가했는지 대신 "자동 추가"라고 표시합니다.','체크하면 "냉장고에 넣기" 버튼이 나타나고, 누르면 등록 폼에 이름이 채워진 채 열립니다.'],
+        t:['"우유"를 체크하고 "냉장고에 넣기"를 눌러 등록까지 4탭인지 세어 보세요.','홈에서 요거트를 "다 먹음" 처리하면 여기 자동으로 추가되는지 확인하세요.']},
+  family:{i:['가정 전환이 맨 위. 전환하면 모든 탭의 데이터가 바뀌고 다른 가정은 서버 정책으로 조회 자체가 차단됩니다.','역할은 관리자·구성원·보기 전용 세 가지. 보기 전용에게는 버림과 삭제가 보이지 않습니다.','알림은 아침 요약이 기본이고 개별 알림은 꺼져 있습니다.','사전 덮어쓰기는 이 가정에만 적용되며 공용 값과 함께 보여 줍니다.'],
+        t:['"자취방"으로 전환해 냉장고 탭을 보세요. 칸 구성과 품목이 완전히 다릅니다.','계란 덮어쓰기 일수를 바꾼 뒤 냉장고 탭의 계란 칩이 바뀌는지 확인하세요.','"먹은 사람 표시"를 끄고 홈으로 가면 등록자 이름이 사라집니다.']}
+};
+function renderSide(){const c=INTENT[S.tab];$('#intent').innerHTML=c.i.map(x=>`<li>${x}</li>`).join('');$('#todo').innerHTML=c.t.map(x=>`<li>${x}</li>`).join('');}
+function renderKv(){const st=stats();const frozen=hh().items.filter(i=>i.status==='frozen').length;$('#dataKv').innerHTML=[['가정',hh().name],['구성원',hh().members.length+'명'],['품목',st.all+'개'],['냉동',frozen+'개'],['지남 / 3일 이내',`${st.over} / ${st.soon}`],['장보기',hh().shopping.length+'개'],['사전 덮어쓰기',Object.keys(hh().overrides).length+'건']].map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('');}
+function renderLog(){$('#log').innerHTML=S.log.length?S.log.map(l=>`<span><b>${l.hh}</b> · ${l.type} · ${JSON.stringify(l.payload)}</span>`).join(''):'<span>아직 이벤트가 없어요. 품목을 먹거나 등록해 보세요.</span>';}
+
+/* ───── 동작 ───── */
+function mutate(fn){const snap=snapshot();fn(snap);}
+function act(a,el){
+  const id=el.dataset.id;const it=id?hh().items.find(i=>i.id===id):null;const pname=it?PRESETS[it.preset].name:'';
+  switch(a){
+    case 'gotab':S.tab=el.dataset.tab;S.filter=null;S.q='';if(S.tab==='add'&&!S.form)S.form=emptyForm();break;
+    case 'filter':S.filter=el.dataset.f;S.tab='fridge';S.q='';break;
+    case 'clearfilter':S.filter=null;break;
+    case 'feed':S.feedOpen=!S.feedOpen;break;
+    case 'store':S.store=id;S.comp=null;break;
+    case 'comp':S.comp=(S.comp===id||!id)?null:id;break;
+    case 'open':S.sheet={kind:'item',id};break;
+    case 'close':S.sheet=null;break;
+    case 'undo':doUndo();return;
+    case 'eat':{const snap=snapshot();const p=PRESETS[it.preset];const n=el.dataset.n;let delta;
+      if(n==='all')delta=-it.qty;
+      else if(n==='half'){ if(p.unit==='g'||it.qty>1){delta=-Math.floor(it.qty/2);} else {delta=0;it.half=true;} }
+      else delta=-1;
+      it.qty+=delta;logEvent('qty',{name:pname,delta,half:it.half||undefined,who:me()});
+      if(delta===0){snack(`${pname}을(를) 절반 남음으로 표시했어요`,snap);S.sheet=null;break;}
+      if(it.qty<=0){hh().items=hh().items.filter(i=>i!==it);hh().shopping.push({id:'s'+(uid++),name:pname,checked:false,by:me(),auto:true});snack(`${pname}을(를) 다 먹었어요. 장보기에 추가됨`,snap);}
+      else snack(`${pname} ${-delta}${p.type==='count'?p.unit:'만큼'} 먹음으로 기록했어요`,snap);
+      S.sheet=null;break;}
+    case 'waste':{const snap=snapshot();hh().items=hh().items.filter(i=>i!==it);hh().shopping.push({id:'s'+(uid++),name:pname,checked:false,by:me(),auto:true});logEvent('waste',{name:pname,who:me()});snack(`${pname}을(를) 버림으로 기록했어요`,snap);S.sheet=null;break;}
+    case 'clearstale':{const snap=snapshot();const stale=hh().items.filter(i=>{const e=expiryOf(i);return e.date&&e.d<=-3;});stale.forEach(i=>{logEvent('waste',{name:PRESETS[i.preset].name,who:me()});hh().shopping.push({id:'s'+(uid++),name:PRESETS[i.preset].name,checked:false,by:me(),auto:true});});hh().items=hh().items.filter(i=>!stale.includes(i));snack(`${stale.length}개를 버림으로 정리했어요`,snap);break;}
+    case 'extend':{const snap=snapshot();const e=expiryOf(it);const base=e.date||TODAY;it.manual=addDays(base,3);logEvent('extend',{name:pname,to:fmt(it.manual),who:me()});snack(`${pname} 기한을 ${fmt(it.manual)}까지로 바꿨어요`,snap);break;}
+    case 'openit':{const snap=snapshot();it.opened=TODAY;logEvent('open',{name:pname,who:me()});snack(`${pname} 개봉일을 오늘로 기록했어요`,snap);break;}
+    case 'freeze':{if(it.status==='thawed'){S.sheet={kind:'refreeze',id};break;}const snap=snapshot();const fz=hh().storages.find(s=>s.id==='freezer');it.store='freezer';it.comp=fz.comps[0].id;it.frozenAt=TODAY;it.status='frozen';it.manual=null;logEvent('move',{name:pname,to:'냉동실',who:me()});snack(`${pname}을(를) 냉동실로 옮겼어요`,snap);S.sheet=null;break;}
+    case 'refreeze':{const snap=snapshot();const fz=hh().storages.find(s=>s.id==='freezer');it.store='freezer';it.comp=fz.comps[0].id;it.frozenAt=TODAY;it.status='frozen';it.manual=ahead(7);logEvent('move',{name:pname,to:'냉동실(재냉동)',who:me()});snack(`${pname} 재냉동. 기한 7일로 설정`,snap);S.sheet=null;break;}
+    case 'thaw':{const snap=snapshot();const fr=hh().storages.find(s=>s.id==='fridge');const all=[...fr.comps,...fr.door];const c=all.find(x=>x.hint===PRESETS[it.preset].hint)||all[0];it.store='fridge';it.comp=c.id;it.status='thawed';it.thawedAt=TODAY;it.manual=null;logEvent('thaw',{name:pname,who:me()});snack(`${pname}을(를) 냉장으로 꺼냈어요. 24시간 안에 드세요`,snap);S.sheet=null;break;}
+    case 'addshop':{const snap=snapshot();hh().shopping.push({id:'s'+(uid++),name:el.dataset.name,checked:false,by:me(),auto:false});snack(`${el.dataset.name}을(를) 장보기에 추가했어요`,snap);S.q='';S.tab='shop';break;}
+    case 'shopadd':{const v=$('#shopInp').value.trim();if(!v)return;const snap=snapshot();hh().shopping.push({id:'s'+(uid++),name:v,checked:false,by:me(),auto:false});snack(`${v} 추가됨`,snap);break;}
+    case 'check':{const s=hh().shopping.find(x=>x.id===id);s.checked=!s.checked;break;}
+    case 'putin':{const checked=hh().shopping.filter(s=>s.checked);const first=checked[0];S.form=emptyForm();const key=Object.keys(PRESETS).find(k=>PRESETS[k].name===first.name);if(key)applyPreset(key);else S.form.name=first.name;hh().shopping=hh().shopping.filter(s=>s!==first);if(checked.length>1){S.batch=true;}S.tab='add';S.form.focus=!key;break;}
+    case 'hh':S.hh=id;S.store='fridge';S.comp=null;S.q='';S.filter=null;S.form=null;S.sheet=null;break;
+    case 'copy':{const t='KX7-4P2';try{navigator.clipboard.writeText(t).then(()=>snack('초대 코드를 복사했어요'),()=>snack('코드: KX7-4P2 (직접 복사해 주세요)'));}catch(e){snack('코드: KX7-4P2 (직접 복사해 주세요)');}return;}
+    case 'notif':{hh().notif[el.dataset.k]=!hh().notif[el.dataset.k];break;}
+    case 'eater':hh().showEater=!hh().showEater;break;
+    case 'ov':{const k=el.dataset.k;hh().overrides[k].fridge=Math.max(5,hh().overrides[k].fridge+parseInt(el.dataset.d,10));snack(`${PRESETS[k].name} 기준을 ${hh().overrides[k].fridge}일로 바꿨어요. 이 가정에만 적용`);break;}
+    /* 등록 폼 */
+    case 'preset':applyPreset(el.dataset.key);break;
+    case 'custom':S.form.preset=null;S.form.customConfirmed=true;break;
+    case 'qty':{const f=S.form;const step=(f.preset&&PRESETS[f.preset].type==='amount'&&f.unit==='g')?100:1;f.qty=Math.max(1,f.qty+step*parseInt(el.dataset.d,10));break;}
+    case 'fstore':{S.form.store=id;const st=hh().storages.find(s=>s.id===id);S.form.comp=[...st.comps,...st.door][0].id;break;}
+    case 'fcomp':S.form.comp=id;break;
+    case 'fpur':S.form.purchased=ago(parseInt(el.dataset.n,10));S.form.adv=false;break;
+    case 'adv':S.form.adv=!S.form.adv;break;
+    case 'fexp':S.form.expiryMode=el.dataset.k;break;
+    case 'fopen':S.form.opened=!S.form.opened;break;
+    case 'batch':S.batch=!S.batch;if(!S.batch)S.batchCount=0;break;
+    case 'save':saveForm(false);return;
+    case 'merge':{const d=S.sheet;const snap=snapshot();d.existing.qty+=d.qty;logEvent('qty',{name:PRESETS[d.preset].name,delta:d.qty,who:me()});S.sheet=null;afterSave(PRESETS[d.preset].name+' 수량을 합쳤어요',snap);return;}
+    case 'separate':{S.sheet=null;saveForm(true);return;}
+    default:return;
+  }
+  render();
+}
+function saveForm(force){
+  const f=S.form;if(!f.name.trim())return;
+  if(!f.preset){
+    const key='custom_'+f.name.trim();
+    if(!PRESETS[key])PRESETS[key]={name:f.name.trim(),cat:'기타',unit:f.unit||'개',qty:1,type:'count',fridge:7,freezer:90,opened:null,store:'fridge',hint:'dairy'};
+    f.preset=key;if(!f.comp){const st=hh().storages.find(s=>s.id===f.store);f.comp=[...st.comps,...st.door][0].id;}
+  }
+  if(!force){const ex=hh().items.find(i=>i.preset===f.preset&&i.store===f.store&&i.status!=='thawed');if(ex){S.sheet={kind:'dup',preset:f.preset,qty:f.qty,existing:ex};render();return;}}
+  const snap=snapshot();
+  const it=mk(f.preset,{qty:f.qty,store:f.store,comp:f.comp,purchased:f.purchased,base:f.base||null,printed:f.printed||null,opened:f.opened?TODAY:null,by:me(),status:f.store==='freezer'?'frozen':'cold',frozenAt:f.store==='freezer'?f.purchased:null});
+  if(f.expiryMode==='manual'&&f.manual)it.manual=f.manual;else if(/^\+/.test(f.expiryMode))it.manual=addDays(TODAY,parseInt(f.expiryMode.slice(1),10));
+  hh().items.unshift(it);
+  const r=hh().recent.filter(k=>k!==f.preset);r.unshift(f.preset);hh().recent=r.slice(0,3);
+  logEvent('add',{name:PRESETS[f.preset].name,qty:f.qty,comp:f.comp,who:me()});
+  afterSave(`${PRESETS[f.preset].name} ${f.qty}${f.unit} 등록했어요`,snap);
+}
+function afterSave(msg,snap){
+  const f=S.form;
+  if(S.batch){S.batchCount++;const st=f.store,comp=f.comp;S.form=emptyForm();S.form.store=st;S.form.comp=comp;S.form.focus=true;snack(msg+` · 장본 날 ${S.batchCount}개째`,snap);S.tab='add';}
+  else{S.form=null;S.tab='fridge';S.store=f.store;S.comp=f.comp;S.q='';S.filter=null;snack(msg,snap);}
+  render();
+}
+
+/* ───── 이벤트 위임 ───── */
+const phone=$('#phone');
+phone.addEventListener('click',e=>{
+  const t=e.target.closest('[data-action],[data-tab]');if(!t||!phone.contains(t))return;
+  if(t.dataset.tab&&!t.dataset.action){S.tab=t.dataset.tab;S.filter=null;S.q='';S.sheet=null;if(S.tab==='add'&&!S.form){S.form=emptyForm();S.form.focus=true;}render();return;}
+  if(t.dataset.action==='close'&&e.target!==t&&!e.target.closest('.btn'))return; /* 시트 안쪽 클릭은 닫지 않음 */
+  act(t.dataset.action,t);
+});
+phone.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button],[role=checkbox]')){e.preventDefault();e.target.click();}});
+phone.addEventListener('input',e=>{
+  const id=e.target.id;
+  if(id==='q'){S.q=e.target.value;S.filter=null;const pos=e.target.selectionStart;render();const i=$('#q');i.focus();i.setSelectionRange(pos,pos);}
+  else if(id==='nameInp'){S.form.name=e.target.value;S.form.preset=null;S.form.customConfirmed=false;const pos=e.target.selectionStart;render();const i=$('#nameInp');i.focus();i.setSelectionRange(pos,pos);}
+  else if(id==='manInp'){S.form.manual=e.target.value;render();}
+  else if(id==='purInp'){S.form.purchased=e.target.value||TODAY;render();}
+  else if(id==='baseInp'){S.form.base=e.target.value;render();}
+  else if(id==='prInp'){S.form.printed=e.target.value;render();}
+});
+phone.addEventListener('change',e=>{if(e.target.id==='morningSel'){hh().notif.morning=e.target.value;snack(`아침 요약을 ${e.target.value}에 보내요`);}});
+document.querySelectorAll('.flow-btn').forEach(b=>b.addEventListener('click',()=>{S.tab=b.dataset.flow;S.sheet=null;S.q='';S.filter=null;if(S.tab==='add'&&!S.form)S.form=emptyForm();render();document.getElementById('proto').scrollIntoView({behavior:'smooth',block:'start'});}));
+(function clock(){const d=new Date();$('#clock').textContent=`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;setTimeout(clock,30000);})();
+render();renderLog();
+})();
+</script>
