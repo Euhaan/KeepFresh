@@ -25,14 +25,15 @@ export function CatTile({ cat, frozen, size = 20 }: { cat: string; frozen?: bool
   );
 }
 
-export function ItemRow({ item, app }: { item: Item; app: AppApi }) {
+export function ItemRow({ item, app, hideLoc }: { item: Item; app: AppApi; hideLoc?: boolean }) {
   const p = presetForItem(item);
   const e = app.exp(item);
-  const sub: string[] = [app.locOf(item)];
+  const sub: string[] = hideLoc ? [] : [app.locOf(item)];
   if (item.baseAt) sub.push(`${p.baseLabel ?? '기준일'} ${formatShort(item.baseAt)}`);
   else if (item.openedAt) sub.push(`개봉 ${formatShort(item.openedAt)}`);
   else if (item.frozenAt) sub.push(`${formatShort(item.frozenAt)} 냉동`);
   if (item.status === 'thawed') sub.push('해동됨');
+  if (item.purchasedAt && sub.length === 0) sub.push(`구매 ${formatShort(item.purchasedAt)}`);
   const who = app.hh.showEater ? app.hh.members.find((m) => m.id === item.createdBy)?.name : undefined;
   return (
     <button className="row" onClick={() => app.openItem(item.id)}>

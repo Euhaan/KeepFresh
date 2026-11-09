@@ -84,10 +84,16 @@ export function Fridge({ app }: { app: AppApi }) {
   } else if (st) {
     const sel = compId ? st.compartments.find((c) => c.id === compId) : undefined;
     const storageItems = hh.items.filter((it) => it.storageId === st.id);
+    const byUrgency = (a: { e: { days: number | null } }, b: { e: { days: number | null } }) => (a.e.days ?? 9999) - (b.e.days ?? 9999);
     const its = storageItems
       .filter((it) => !sel || it.compartmentId === sel.id)
       .map((it) => ({ it, e: exp(it) }))
-      .sort((a, b) => (a.e.days ?? 9999) - (b.e.days ?? 9999));
+      .sort(byUrgency);
+    // 칸을 고르지 않았을 때는 칸별 섹션으로 묶는다. 빈 칸은 그림에만 보이고 목록에서는 생략
+    const groups = st.compartments
+      .map((c) => ({ c, rows: its.filter((x) => x.it.compartmentId === c.id) }))
+      .filter((g) => g.rows.length > 0);
+    const urgentIn = (rows: typeof its) => rows.filter((x) => x.e.days != null && x.e.days <= 3).length;
     body = (
       <>
         <div className="seg" role="tablist">
@@ -107,26 +113,56 @@ export function Fridge({ app }: { app: AppApi }) {
           ))}
         </div>
         <FridgeMap storage={st} items={storageItems} exp={exp} selected={compId} onSelect={setCompId} />
-        <div className="card">
-          <div className="card-title">
-            {sel ? sel.name : `${st.name} 전체`}
-            <span className="hint">
-              {its.length}개
-              {sel && (
-                <>
-                  {' · '}
-                  <button className="link" onClick={() => setCompId(null)}>
-                    전체
+        {sel ? (
+          <div className="card">
+            <div className="card-title">
+              {sel.name}
+              <span className="hint">
+                {its.length}개 ·{' '}
+                <button className="link" onClick={() => setCompId(null)}>
+                  모든 칸 보기
+                </button>
+              </span>
+            </div>
+            {its.length ? (
+              its.map((x) => <ItemRow key={x.it.id} item={x.it} app={app} hideLoc />)
+            ) : (
+              <Empty
+                title={`${sel.name}이(가) 비었어요`}
+                desc="등록 탭에서 추가하거나 다른 칸에서 옮겨 오세요."
+                art={<EmptyArt />}
+                action={
+                  <button className="btn sm" onClick={() => app.go('add')}>
+                    등록하기
                   </button>
-                </>
-              )}
-            </span>
+                }
+              />
+            )}
           </div>
-          {its.length ? (
-            its.map((x) => <ItemRow key={x.it.id} item={x.it} app={app} />)
-          ) : (
+        ) : groups.length ? (
+          groups.map(({ c, rows }) => {
+            const u = urgentIn(rows);
+            return (
+              <div className="card" key={c.id}>
+                <div className="card-title">
+                  <span>
+                    {c.name}
+                    {u > 0 && <span className="urgent-tag" style={{ marginLeft: 8 }}>챙길 것 {u}</span>}
+                  </span>
+                  <button className="link" onClick={() => setCompId(c.id)}>
+                    {rows.length}개 · 이 칸만
+                  </button>
+                </div>
+                {rows.map((x) => (
+                  <ItemRow key={x.it.id} item={x.it} app={app} hideLoc />
+                ))}
+              </div>
+            );
+          })
+        ) : (
+          <div className="card">
             <Empty
-              title={`${sel ? sel.name : st.name}이(가) 비었어요`}
+              title={`${st.name}이(가) 비었어요`}
               desc="등록 탭에서 추가하거나 다른 칸에서 옮겨 오세요."
               art={<EmptyArt />}
               action={
@@ -135,8 +171,8 @@ export function Fridge({ app }: { app: AppApi }) {
                 </button>
               }
             />
-          )}
-        </div>
+          </div>
+        )}
       </>
     );
   }

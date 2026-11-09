@@ -46,7 +46,8 @@ export function buildSummary(hh: Household, ctx: ExpiryContext): Summary {
 
 export async function show(summary: Summary, tag = 'kankan-morning'): Promise<boolean> {
   if (permission() !== 'granted') return false;
-  const opts: NotificationOptions = { body: summary.body, tag, icon: '/icon.svg', badge: '/icon.svg', lang: 'ko' };
+  const icon = `${import.meta.env.BASE_URL}icon.svg`;
+  const opts: NotificationOptions = { body: summary.body, tag, icon, badge: icon, lang: 'ko' };
   try {
     const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
     if (reg) await reg.showNotification(summary.title, opts);
