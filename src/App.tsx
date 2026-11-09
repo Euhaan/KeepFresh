@@ -14,6 +14,7 @@ import { Family } from './ui/screens/Family';
 import { Fridge } from './ui/screens/Fridge';
 import { Home } from './ui/screens/Home';
 import { Dishes } from './ui/screens/Dishes';
+import { Onboarding } from './ui/screens/Onboarding';
 import { Shopping } from './ui/screens/Shopping';
 
 const TABS: { id: Tab; label: string; icon: () => ReactElement }[] = [
@@ -106,6 +107,8 @@ export default function App() {
   }, [sheetItemId, sheetItem]);
 
   const Screen = { home: Home, fridge: Fridge, add: Add, dishes: Dishes, shop: Shopping, family: Family }[tab];
+
+  if (!state.onboarded) return <Onboarding />;
 
   return (
     <div className="app">

@@ -1,4 +1,4 @@
-import type { Household, Item, NotificationSettings, PresetOverride, ShoppingItem, Storage } from './types';
+import type { Household, Item, Member, NotificationSettings, PresetOverride, ShoppingItem, Storage } from './types';
 
 /**
  * 모든 변경은 이벤트다. 수량은 절대값이 아니라 증감(delta)으로 기록하므로
@@ -17,7 +17,10 @@ export type EventBody =
   | { type: 'OVERRIDE_SET'; presetKey: string; override: PresetOverride | null }
   | { type: 'SETTINGS_PATCH'; patch: Partial<{ name: string; showEater: boolean; notifications: NotificationSettings }> }
   | { type: 'RECENT_TOUCH'; presetKey: string }
-  | { type: 'STORAGES_SET'; storages: Storage[] };
+  | { type: 'STORAGES_SET'; storages: Storage[] }
+  | { type: 'MEMBER_ADD'; member: Member }
+  | { type: 'MEMBER_RENAME'; memberId: string; name: string }
+  | { type: 'MEMBER_REMOVE'; memberId: string };
 
 export type KanEvent = EventBody & {
   id: string;
@@ -68,6 +71,14 @@ export function applyEvent(h: Household, ev: KanEvent): Household {
       return { ...h, recentPresetKeys: [ev.presetKey, ...h.recentPresetKeys.filter((k) => k !== ev.presetKey)].slice(0, 3) };
     case 'STORAGES_SET':
       return { ...h, storages: ev.storages };
+    case 'MEMBER_ADD':
+      if (h.members.some((m) => m.id === ev.member.id)) return h;
+      return { ...h, members: [...h.members, ev.member] };
+    case 'MEMBER_RENAME':
+      return { ...h, members: h.members.map((m) => (m.id === ev.memberId ? { ...m, name: ev.name } : m)) };
+    case 'MEMBER_REMOVE':
+      if (h.members.length <= 1) return h;
+      return { ...h, members: h.members.filter((m) => m.id !== ev.memberId) };
   }
 }
 

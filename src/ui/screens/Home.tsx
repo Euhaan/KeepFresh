@@ -59,9 +59,7 @@ export function Home({ app }: { app: AppApi }) {
   return (
     <>
       <div className="greet">
-        <h1>
-          {app.meName}, {greeting}
-        </h1>
+        <h1>{app.meName === '나' ? greeting : `${app.meName}, ${greeting}`}</h1>
         <span className="date">{dateLabel}</span>
       </div>
 

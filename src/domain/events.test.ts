@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import * as A from './actions';
 import { applyEvents, type KanEvent } from './events';
-import { seedHouseholds } from './seed';
+import { demoHouseholds } from './fixtures';
 
 const TODAY = '2026-11-09';
 let n = 0;
 const env = (hid: string) => (body: A.ActionResult['events'][number], i: number): KanEvent => ({ ...body, id: `e${++n}_${i}`, householdId: hid, txn: 't', at: new Date().toISOString(), by: 'm_mom' });
 
 function setup() {
-  const [h] = seedHouseholds(TODAY);
+  const [h] = demoHouseholds(TODAY);
   const ctx: A.ActionContext = { today: TODAY, overrides: h.overrides, household: h, me: 'm_mom', newId: () => `id${++n}` };
   return { h, ctx };
 }
@@ -68,7 +68,7 @@ describe('이벤트 기반 상태', () => {
     expect(A.findDuplicate({ presetKey: 'egg', storageId: 'st_freezer' }, h)).toBeUndefined();
   });
   it('다른 가정의 이벤트는 적용되지 않는다', () => {
-    const [a, b] = seedHouseholds(TODAY);
+    const [a, b] = demoHouseholds(TODAY);
     const ctx: A.ActionContext = { today: TODAY, overrides: {}, household: b, me: 'm_jiwoo', newId: () => `id${++n}` };
     const r = A.eat(b.items[0], 'all', ctx);
     const aAfter = applyEvents(a, r.events.map(env(b.id)));
