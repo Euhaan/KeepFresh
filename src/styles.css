@@ -124,7 +124,8 @@ button { cursor: pointer; }
 .seg button.on { background: var(--fg); color: var(--bg); font-weight: 700; }
 
 /* 냉장고 그림 */
-.fm { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 20px rgba(20, 31, 29, 0.10)); }
+.fm-wrap { position: relative; width: 100%; height: 0; }
+.fm { position: absolute; inset: 0; width: 100%; height: 100%; display: block; filter: drop-shadow(0 10px 20px rgba(20, 31, 29, 0.10)); }
 .fm text { font-family: var(--font-ui); }
 .fm-body { fill: var(--surface); stroke: none; }
 .fm-inner { fill: var(--surface-2); }
