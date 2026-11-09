@@ -1,4 +1,4 @@
--- 칸칸 서버 스키마. 가정 단위로 완전히 분리되며, 모든 접근은 memberships를 통해 RLS로 강제된다.
+-- 킵프레시 서버 스키마. 가정 단위로 완전히 분리되며, 모든 접근은 memberships를 통해 RLS로 강제된다.
 -- 앱은 이벤트를 올리고(append-only) 다른 기기의 이벤트를 받아 재생한다. 읽기용 스냅샷 표는 2차에서 추가한다.
 
 create extension if not exists pgcrypto;

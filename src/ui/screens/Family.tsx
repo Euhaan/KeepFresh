@@ -87,7 +87,7 @@ export function Family({ app }: { app: AppApi }) {
             </button>
           )}
           {perm === 'granted' && (
-            <button className="btn sm" onClick={() => void show(buildSummary(hh, app.ctx), 'kankan-preview')}>
+            <button className="btn sm" onClick={() => void show(buildSummary(hh, app.ctx), 'keepfresh-preview')}>
               미리보기
             </button>
           )}

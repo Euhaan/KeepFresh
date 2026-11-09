@@ -5,4 +5,6 @@
   <rect x="42" y="62" width="44" height="40" rx="4" fill="#D9EFF1"/>
   <rect x="48" y="34" width="4" height="14" rx="2" fill="#0E7C86"/>
   <rect x="48" y="70" width="4" height="20" rx="2" fill="#0E7C86"/>
+  <path d="M66 94c0-11 8-18 20-18 0 11-8 18-20 18z" fill="#2E7D4F"/>
+  <path d="M66 94l12-10" stroke="#F6F8F7" stroke-width="2" stroke-linecap="round"/>
 </svg>

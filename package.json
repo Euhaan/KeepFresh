@@ -1,9 +1,9 @@
 {
-  "name": "kankan",
+  "name": "keepfresh",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "가족이 함께 쓰는 냉장고 관리 앱 칸칸",
+  "description": "가족이 함께 쓰는 냉장고 관리 앱 킵프레시(KeepFresh)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

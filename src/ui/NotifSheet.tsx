@@ -21,7 +21,7 @@ export function NotifSheet({ app, onClose }: { app: AppApi; onClose: () => void 
     const p = await requestPermission();
     setPerm(p);
   };
-  const preview = async () => setSent(await show(summary, 'kankan-preview'));
+  const preview = async () => setSent(await show(summary, 'keepfresh-preview'));
 
   return (
     <Sheet label="알림함" onClose={onClose} title={<>알림함 <span className="hint" style={{ fontWeight: 400 }}>{hh.notifications.morningAt} 아침 요약</span></>}>

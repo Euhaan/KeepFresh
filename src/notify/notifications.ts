@@ -44,7 +44,7 @@ export function buildSummary(hh: Household, ctx: ExpiryContext): Summary {
   return { title, body: lines.join('\n') || '임박하거나 지난 품목이 없습니다.', over: over.length, soon: soon.length, today: todayList.length, lines };
 }
 
-export async function show(summary: Summary, tag = 'kankan-morning'): Promise<boolean> {
+export async function show(summary: Summary, tag = 'keepfresh-morning'): Promise<boolean> {
   if (permission() !== 'granted') return false;
   const icon = `${import.meta.env.BASE_URL}icon.svg`;
   const opts: NotificationOptions = { body: summary.body, tag, icon, badge: icon, lang: 'ko' };
@@ -63,7 +63,7 @@ function inQuietHours(d: Date): boolean {
   return h >= 22 || h < 7;
 }
 
-const lastKey = (hhId: string) => `kankan.notif.last.${hhId}`;
+const lastKey = (hhId: string) => `keepfresh.notif.last.${hhId}`;
 
 /**
  * 1분마다 확인해서 아침 요약 시간이 지났고 오늘 아직 안 보냈으면 한 번 보낸다.

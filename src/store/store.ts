@@ -5,7 +5,7 @@ import { seedHouseholds } from '../domain/seed';
 import type { Household } from '../domain/types';
 import { createSync, type Sync } from './sync';
 
-const KEY = 'kankan.v1';
+const KEY = 'keepfresh.v1';
 
 interface Persisted {
   version: 1;
